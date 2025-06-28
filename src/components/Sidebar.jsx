@@ -4,7 +4,6 @@ import { NavLink } from "react-router-dom";
 const navItems = [
   { path: "/orders", label: "Siparişler" },
   { path: "/tables", label: "Masalar" },
-  { path: "/menu", label: "Kategori & Menü" },
   { path: "/settings", label: "İşyeri Ayarları" },
 ];
 

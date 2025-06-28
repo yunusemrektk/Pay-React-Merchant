@@ -3,9 +3,8 @@ import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import OrderManagement from "./components/OrderManagement";
-import CategoryMenuManager from "./components/CategoryMenuManager";
 import TableManager from "./components/TableManager";
-import MerchantSettings from "./components/MerhcantSettings";
+import Settings from "./components/Settings";
 
 function App() {
   return (
@@ -16,8 +15,7 @@ function App() {
           <Route path="/" element={<Navigate to="/orders" replace />} />
           <Route path="/orders" element={<OrderManagement />} />
           <Route path="/tables" element={<TableManager />} />
-          <Route path="/menu" element={<CategoryMenuManager />} />
-          <Route path="/settings" element={<MerchantSettings />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </div>
     </div>

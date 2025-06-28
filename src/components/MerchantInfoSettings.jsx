@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { merchants } from "../data/exampleData";
 
-export default function MerchantSettings() {
+export default function MerchantInfoSettings() {
   const [info, setInfo] = useState(merchants[0]);
 
   function handleChange(e) {
@@ -15,7 +15,7 @@ export default function MerchantSettings() {
 
   return (
     <div className="max-w-lg">
-      <h2 className="text-2xl font-bold mb-6">İşyeri Ayarları</h2>
+      <h3 className="text-xl font-semibold mb-4">İşyeri Bilgisi</h3>
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium mb-1">İşyeri Adı</label>
