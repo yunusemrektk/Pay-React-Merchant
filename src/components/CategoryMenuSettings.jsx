@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { categories as initialCategories, menu_items as initialMenu } from "../data/exampleData";
+import { categories as initialCategories, menu_items as initialMenu, merchants as initialMerchant } from "../data/exampleData";
+import CloudinaryUpload from './CloudinaryUpload';
 
 function uniqId() {
     return Date.now() + Math.floor(Math.random() * 1000);
@@ -25,15 +26,20 @@ const SwapIcon = () => (
 );
 
 export default function CategoryMenuSettings() {
+
+  
     const [categories, setCategories] = useState([...initialCategories]);
     const [menu, setMenu] = useState([...initialMenu]);
     const [activeCatId, setActiveCatId] = useState(categories[0]?.id || null);
-
+    const activeMerchantId = "merc1"; // TODO GET THIS DYNAMIC
     // Modal State
     const [catModal, setCatModal] = useState({ open: false, edit: null, value: "" });
     const [showCatDel, setShowCatDel] = useState(null);
 
-    const [menuModal, setMenuModal] = useState({ open: false, tab: 0, edit: null, form: { name: "", description: "", price: "" } });
+    const [menuModal, setMenuModal] = useState({
+        open: false, tab: 0, edit: null,
+        form: { name: "", description: "", price: "", image_path: "" }
+    });
     const [showMenuDel, setShowMenuDel] = useState(null);
 
     // Kategori işlemleri
@@ -54,7 +60,6 @@ export default function CategoryMenuSettings() {
         } else {
             const newCat = {
                 id: uniqId(),
-                merchant_id: "merc1",
                 category_key: catModal.value.trim().toLowerCase().replace(/\s+/g, "-"),
                 label: catModal.value.trim(),
                 sort_order: categories.length + 1,
@@ -96,7 +101,6 @@ export default function CategoryMenuSettings() {
                 ...menu,
                 {
                     id: uniqId(),
-                    merchant_id: "merc1",
                     category_id: activeCatId,
                     name: menuModal.form.name,
                     description: menuModal.form.description,
@@ -126,7 +130,6 @@ export default function CategoryMenuSettings() {
         setMenu(menu.map(m =>
             m.id === menuId ? { ...m, category_id: activeCatId } : m
         ));
-        setMenuModal({ ...menuModal, open: false, tab: 0, edit: null });
     }
 
     // Aktif kategorinin menüleri
@@ -138,19 +141,22 @@ export default function CategoryMenuSettings() {
         <div className="flex gap-8">
             {/* Sidebar - Kategoriler */}
             <div className="w-64">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2 sticky top-0 z-10 bg-[#F7FAFC] pb-2">
                     <h3 className="font-bold text-lg">Kategoriler</h3>
                     <button
                         onClick={() => openCatModal(null)}
                         className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700"
                     >+ Yeni</button>
                 </div>
-                <ul className="space-y-2">
+                <ul
+                    className="space-y-2 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50"
+                    style={{ overscrollBehavior: 'contain' }}
+                >
                     {categories.map(cat => (
                         <li
                             key={cat.id}
                             className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer border transition
-                ${activeCatId === cat.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}`}
+          ${activeCatId === cat.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}`}
                             onClick={() => setActiveCatId(cat.id)}
                         >
                             <span className="truncate">{cat.label}</span>
@@ -183,44 +189,39 @@ export default function CategoryMenuSettings() {
                             + Ürün Ekle
                         </button>
                     </div>
-                    <div className="bg-white rounded-xl shadow p-5 min-h-[240px]">
-                        <table className="w-full text-sm">
+                    <div className="bg-white rounded-xl shadow p-5 min-h-[320px] max-h-[320px]">
+                        {/* Başlıklar */}
+                        <table className="w-full text-sm table-fixed">
                             <thead>
                                 <tr className="border-b">
-                                    <th className="py-2 text-left">Ürün</th>
-                                    <th className="py-2 text-left">Açıklama</th>
-                                    <th className="py-2 text-center">Fiyat</th>
-                                    <th className="py-2 text-center">İşlem</th>
+                                    <th className="py-2 text-left w-1/4">Ürün</th>
+                                    <th className="py-2 text-left w-2/5">Açıklama</th>
+                                    <th className="py-2 text-center w-1/6">Fiyat</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {filteredMenu.map(item => (
-                                    <tr key={item.id} className="border-b last:border-none">
-                                        <td className="py-2">{item.name}</td>
-                                        <td className="py-2">{item.description}</td>
-                                        <td className="py-2 text-center">{parseFloat(item.price).toFixed(2)} ₺</td>
-                                        <td className="py-2 text-center flex items-center justify-center gap-2">
-                                            <span onClick={() => openMenuModal({ tab: 0, edit: item })}>
-                                                <EditIcon />
-                                            </span>
-                                            <span onClick={() => setShowMenuDel(item)}>
-                                                <DeleteIcon />
-                                            </span>
-                                            <span title="Kategori değiştir" onClick={() => setMoveMenuItem(item)}>
-                                                <SwapIcon />
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {filteredMenu.length === 0 && (
-                                    <tr>
-                                        <td colSpan={4} className="py-3 text-center text-gray-400">
-                                            Bu kategoride ürün yok.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
                         </table>
+                        {/* Satırlar scrollable */}
+                        <div className="overflow-y-auto" style={{ maxHeight: "260px" }}>
+                            <table className="w-full text-sm table-fixed">
+                                <tbody>
+                                    {/* Ürün satırları burada */}
+                                    {filteredMenu.map(item => (
+                                        <tr key={item.id} className="border-b last:border-none">
+                                            <td className="py-2 w-1/4">{item.name}</td>
+                                            <td className="py-2 w-2/5">{item.description}</td>
+                                            <td className="py-2 w-1/6 text-center">{parseFloat(item.price).toFixed(2)} ₺</td>
+                                        </tr>
+                                    ))}
+                                    {filteredMenu.length === 0 && (
+                                        <tr>
+                                            <td colSpan={4} className="py-3 text-center text-gray-400">
+                                                Bu kategoride ürün yok.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     {/* "Var olan ürünü ata" */}
                     <div className="mt-4">
@@ -347,6 +348,14 @@ export default function CategoryMenuSettings() {
                                     placeholder="Fiyat (₺)"
                                     required
                                     inputMode="decimal"
+                                />
+                                <CloudinaryUpload
+                                    value={menuModal.form.image_path}
+                                    folderName={activeMerchantId}
+                                    onChange={url => setMenuModal({
+                                        ...menuModal,
+                                        form: { ...menuModal.form, image_path: url }
+                                    })}
                                 />
                                 <div className="flex gap-2 justify-end">
                                     <button type="button" onClick={() => setMenuModal({ open: false, tab: 0, edit: null, form: { name: "", description: "", price: "" } })} className="px-4 py-2 rounded bg-gray-100">
