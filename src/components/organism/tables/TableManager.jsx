@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { tables, orders } from "../data/exampleData";
+import { tables, orders } from "../../../data/exampleData";
 
 export default function TableManager() {
   const [selectedTable, setSelectedTable] = useState(null);

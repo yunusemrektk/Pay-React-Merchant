@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { orders, tables, menu_items } from "../data/exampleData";
+import { orders, tables, menu_items } from "../../../data/exampleData";
 
 const statusColors = {
   pending: "bg-yellow-200 text-yellow-800",

@@ -1,10 +1,10 @@
 import React from "react";
 
 import { Routes, Route, Navigate } from "react-router-dom";
-import Sidebar from "./components/Sidebar";
-import OrderManagement from "./components/OrderManagement";
-import TableManager from "./components/TableManager";
-import Settings from "./components/Settings";
+import Sidebar from "./components/organism/main/Sidebar";
+import OrderManagement from "./components/organism/orders/OrderManagement";
+import TableManager from "./components/organism/tables/TableManager";
+import Settings from "./pages/Settings";
 
 function App() {
   return (

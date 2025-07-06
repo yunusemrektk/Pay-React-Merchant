@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import CategoryMenuSettings from "./CategoryMenuSettings";
-import MerchantInfoSettings from "./MerchantInfoSettings";
+import CategoryMenuSettings from "../components/organism/settings/CategoryMenuSettings";
+import MerchantInfoSettings from "../components/organism/settings/MerchantInfoSettings";
 
 const tabs = [
   { key: "categories", label: "Kategori & Menü" },

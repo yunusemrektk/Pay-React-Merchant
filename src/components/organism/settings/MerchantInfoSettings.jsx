@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { merchants } from "../data/exampleData";
+import { merchants } from "../../../data/exampleData";
 
 export default function MerchantInfoSettings() {
   const [info, setInfo] = useState(merchants[0]);
