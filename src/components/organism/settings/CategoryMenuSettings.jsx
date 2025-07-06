@@ -130,7 +130,14 @@ export default function CategoryMenuSettings() {
     setCategories(newCategories);
   }
 
-  // Aktif kategorinin menüleri
+  function handleMenuSort(newMenuOrder) {
+    setMenu((old) =>
+      old
+        .filter((m) => m.category_id !== activeCatId)
+        .concat(newMenuOrder)
+    );
+  }
+
   const filteredMenu = menu.filter(m => m.category_id === activeCatId);
 
   return (
@@ -198,6 +205,7 @@ export default function CategoryMenuSettings() {
               openMenuModal={openMenuModal}
               setShowMenuDel={setShowMenuDel}
               setMoveMenuItem={setMoveMenuItem}
+              onSortMenu={handleMenuSort}
             />
           </div>
         </div>

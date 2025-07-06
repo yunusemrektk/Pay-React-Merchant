@@ -17,3 +17,7 @@ export async function uploadMenuImage(file, merchantId, newItemId) {
     );
     return res.data.secure_url;
 }
+
+export function getCloudinaryUrl(publicId, cloudName = "dw5hdpb6v") {
+  return `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto/${publicId}`;
+}

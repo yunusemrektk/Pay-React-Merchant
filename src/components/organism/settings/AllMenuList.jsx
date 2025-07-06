@@ -1,8 +1,9 @@
 import React from "react";
+import ProductThumbnail from "./ProductThumbnail";
 
 export default function AllMenuList({ categories, menu }) {
   return (
-    <div className="bg-blue-50 rounded-xl shadow-md p-6 max-h-72 overflow-y-auto">
+    <div className="bg-blue-50 rounded-xl shadow-md p-6 max-h-[380px] overflow-y-auto w-full h-full">
       <div className="flex items-center mb-4">
         <svg className="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
@@ -10,6 +11,7 @@ export default function AllMenuList({ categories, menu }) {
         </svg>
         <span className="text-blue-700 font-semibold">Tüm Ürünler</span>
         <span className="ml-3 text-xs text-gray-500">Buradaki alan yalnızca görüntüleme içindir, işlem yapılamaz.</span>
+
       </div>
       <div className="space-y-6">
         {categories.map(cat => {
@@ -24,11 +26,18 @@ export default function AllMenuList({ categories, menu }) {
                   {catProducts.map(prod => (
                     <li
                       key={prod.id}
-                      className="grid grid-cols-3 gap-4 items-center px-3 py-1 rounded hover:bg-blue-100"
+                      className="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-100"
                     >
-                      <span className="font-medium">{prod.name}</span>
-                      <span className="text-gray-500 text-xs">{prod.description}</span>
-                      <span className="text-sm font-mono text-gray-800 justify-self-end">{parseFloat(prod.price).toFixed(2)} ₺</span>
+                      {/* Thumbnail */}
+                      <div className="w-10 h-10 flex items-center justify-center bg-white border rounded shadow-sm overflow-hidden flex-shrink-0">
+                        <ProductThumbnail imagePath={prod.image_path} alt={prod.name} />
+                      </div>
+                      {/* Name */}
+                      <span className="font-medium w-32 truncate flex-shrink-0">{prod.name}</span>
+                      {/* Description */}
+                      <span className="text-gray-500 text-xs truncate w-40 flex-shrink">{prod.description}</span>
+                      {/* Price */}
+                      <span className="text-sm font-mono text-gray-800 w-20 text-right flex-shrink-0">{parseFloat(prod.price).toFixed(2)} ₺</span>
                     </li>
                   ))}
                 </ul>
