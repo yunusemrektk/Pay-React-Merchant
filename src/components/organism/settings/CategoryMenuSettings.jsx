@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { categories as initialCategories, menu_items as initialMenu } from "../../../data/exampleData";
 
@@ -80,7 +81,7 @@ export default function CategoryMenuSettings() {
           price: edit.price,
           image_file: null,
           image_path: edit.image_path || "",
-          category_id: edit.category_id, 
+          category_id: edit.category_id,
         }
         : {
           name: "",
@@ -111,9 +112,6 @@ export default function CategoryMenuSettings() {
         return;
       }
     }
-
-    console.log("menumodal",menuModal)
-    console.log("handleSave",e)
 
     if (menuModal.edit) {
       setMenu(menu.map(m =>
@@ -229,15 +227,25 @@ export default function CategoryMenuSettings() {
             )}
           </div>
           <div className="hidden md:block">
-            {/* Masaüstü için tablo görünümü */}
-            <MenuTable
-              menu={filteredMenu}
-              categories={categories}
-              openMenuModal={openMenuModal}
-              setShowMenuDel={setShowMenuDel}
-              setMoveMenuItem={setMoveMenuItem}
-              onSortMenu={handleMenuSort}
-            />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeCatId}
+                initial={{ opacity: 0, y: 32 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -32 }}
+                transition={{ duration: 0.1 }}
+              >
+                <MenuTable
+                  menu={filteredMenu}
+                  categories={categories}
+                  openMenuModal={openMenuModal}
+                  setShowMenuDel={setShowMenuDel}
+                  setMoveMenuItem={setMoveMenuItem}
+                  onSortMenu={handleMenuSort}
+                />
+              </motion.div>
+            </AnimatePresence>
+
           </div>
         </div>
 

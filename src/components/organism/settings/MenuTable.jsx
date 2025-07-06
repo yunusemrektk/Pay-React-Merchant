@@ -1,12 +1,13 @@
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { EditIcon, DeleteIcon, SwapIcon } from "../main/Icons";
+import { TableRow } from "../../atom/TableRow";
+import { EditIcon, DeleteIcon } from "../main/Icons";
 
 export default function MenuTable({
   menu,
   openMenuModal,
   setShowMenuDel,
-  onSortMenu, // Sıralama callback'i parent'tan gelir
+  onSortMenu,
 }) {
   function handleDragEnd(result) {
     if (!result.destination) return;
@@ -28,7 +29,7 @@ export default function MenuTable({
             <table className="w-full text-sm table-fixed">
               <thead>
                 <tr className="border-b">
-                  <th className="w-8"></th> {/* drag handle sütunu */}
+                  <th className="w-8"></th>
                   <th className="py-2 text-left w-1/4">Ürün</th>
                   <th className="py-2 text-left w-2/5">Açıklama</th>
                   <th className="py-2 text-center w-1/6">Fiyat</th>
@@ -46,10 +47,13 @@ export default function MenuTable({
                   menu.map((item, idx) => (
                     <Draggable draggableId={item.id.toString()} index={idx} key={item.id}>
                       {(provided, snapshot) => (
-                        <tr
+                        <TableRow
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className={`border-b last:border-none group hover:bg-blue-50 transition-colors ${snapshot.isDragging ? "bg-blue-100" : ""}`}
+                          {...provided.dragHandleProps}
+                          className={`border-b last:border-none group hover:bg-blue-50 transition-colors ${
+                            snapshot.isDragging ? "bg-blue-100" : ""
+                          }`}
                           style={{
                             ...provided.draggableProps.style,
                             minHeight: "48px",
@@ -58,7 +62,6 @@ export default function MenuTable({
                         >
                           <td className="w-8 text-center align-middle">
                             <span
-                              {...provided.dragHandleProps}
                               className="cursor-grab text-lg text-gray-400 hover:text-gray-700"
                               title="Sürükle"
                             >
@@ -96,14 +99,13 @@ export default function MenuTable({
                               <DeleteIcon />
                             </button>
                           </td>
-                        </tr>
+                        </TableRow>
                       )}
                     </Draggable>
                   ))
                 )}
                 {provided.placeholder}
               </tbody>
-
             </table>
           </div>
         )}
