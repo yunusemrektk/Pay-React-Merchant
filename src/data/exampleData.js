@@ -180,29 +180,7 @@ export const menu_items = [
     image_path: "/images/green_tea.jpg",
     like_count: 4,
     created_at: "2025-06-20 09:44:00",
-  },
-  {
-    id: 16,
-    merchant_id: "merc1",
-    category_id: 5,
-    name: "Su",
-    description: "Damla su",
-    price: 7.0,
-    image_path: "/images/green_tea.jpg",
-    like_count: 4,
-    created_at: "2025-06-20 09:44:00",
-  },
-  {
-    id: 17,
-    merchant_id: "merc1",
-    category_id: 5,
-    name: "Su",
-    description: "Damla su",
-    price: 7.0,
-    image_path: "/images/green_tea.jpg",
-    like_count: 4,
-    created_at: "2025-06-20 09:44:00",
-  },
+  }
 ];
 
 export const tables = [

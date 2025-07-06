@@ -29,7 +29,7 @@ export default function CloudinaryUpload({ file, onFileSelect }) {
   return (
     <div
       {...getRootProps()}
-      className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50'
+      className={`border-2 border-dashed rounded-lg p-4 min-h-48 flex flex-col items-center justify-center text-center cursor-pointer transition ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50'
         }`}
     >
       <input {...getInputProps()} />
@@ -37,7 +37,7 @@ export default function CloudinaryUpload({ file, onFileSelect }) {
         <img
           src={preview}
           alt="Ürün görseli"
-          className="mx-auto mb-2 max-h-32 rounded shadow"
+          className="mx-auto mb-2 max-h-64 rounded shadow"
         />
       ) : (
         <span className="text-gray-500">

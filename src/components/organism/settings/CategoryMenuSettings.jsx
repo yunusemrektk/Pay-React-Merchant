@@ -10,6 +10,7 @@ import MenuModal from "../../Modals/MenuModal";
 import CategoryModal from "../../Modals/CategoryModal";
 import ConfirmModal from "../../Modals/ConfirmModal";
 import MoveMenuModal from "../../modals/MoveMenuModal";
+import { uploadMenuImage } from "../../../services/menuService";
 
 function uniqId() {
   return Date.now() + Math.floor(Math.random() * 1000);
@@ -84,18 +85,7 @@ export default function CategoryMenuSettings() {
 
     if (menuModal.form.image_file) {
       try {
-        const formData = new FormData();
-        formData.append('file', menuModal.form.image_file);
-        formData.append('upload_preset', 'merchant-items');
-        if (activeMerchantId) {
-          formData.append('folder', activeMerchantId);
-        }
-
-        const res = await axios.post(
-          'https://api.cloudinary.com/v1_1/dw5hdpb6v/image/upload',
-          formData
-        );
-        imageUrl = res.data.secure_url;
+        imageUrl = await uploadMenuImage(menuModal.form.image_file, activeMerchantId);
       } catch (err) {
         alert("Resim yüklenemedi!");
         setSaving(false);
