@@ -65,7 +65,7 @@ export const menu_items = [
     merchant_id: "merc1",
     category_id: 2,
     name: "Tavuklu Sandviç",
-    description: "Izgara tavuk ve yeşilliklerle",
+    description: "Izgara tavuk ve yeşilliklerleIzgara tavuk ve yeşilliklerleIzgara tavuk ve yeşilliklerleIzgara tavuk ve yeşilliklerle",
     price: 32.0,
     image_path: "/images/chicken_sandwich.jpg",
     like_count: 2,

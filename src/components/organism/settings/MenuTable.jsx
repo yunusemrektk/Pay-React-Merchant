@@ -9,7 +9,7 @@ export default function MenuTable({
   setMoveMenuItem,
 }) {
   return (
-    <div className="bg-white rounded-xl shadow p-5 min-h-[320px] max-h-[320px]">
+    <div className="bg-white rounded-xl shadow p-5 min-h-[320px] max-h-[320px] overflow-y-auto">
       <table className="w-full text-sm table-fixed">
         <thead>
           <tr className="border-b">
@@ -31,8 +31,16 @@ export default function MenuTable({
           {/* Her bir ürün için satır */}
           {menu.map((item) => (
             <tr key={item.id} className="border-b last:border-none group hover:bg-blue-50">
-              <td className="py-2 w-1/4">{item.name}</td>
-              <td className="py-2 w-2/5">{item.description}</td>
+              <td className="py-2 w-1/4">
+                <span className="block truncate max-w-[160px] whitespace-nowrap overflow-hidden">
+                  {item.name}
+                </span>
+              </td>
+              <td className="py-2 w-2/5">
+                <span className="block truncate max-w-[260px] whitespace-nowrap overflow-hidden">
+                  {item.description}
+                </span>
+              </td>
               <td className="py-2 w-1/6 text-center">
                 {parseFloat(item.price).toFixed(2)} ₺
               </td>

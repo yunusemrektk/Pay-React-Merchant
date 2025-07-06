@@ -9,6 +9,7 @@ import AllMenuList from "./AllMenuList";
 import MenuModal from "../../Modals/MenuModal";
 import CategoryModal from "../../Modals/CategoryModal";
 import ConfirmModal from "../../Modals/ConfirmModal";
+import MoveMenuModal from "../../modals/MoveMenuModal";
 
 function uniqId() {
   return Date.now() + Math.floor(Math.random() * 1000);
@@ -248,9 +249,21 @@ export default function CategoryMenuSettings() {
         />
       )}
       {moveMenuItem && (
-        <Modal onClose={() => setMoveMenuItem(null)}>
-          {/* ... Modal içeriği burada */}
-        </Modal>
+        <MoveMenuModal
+          menuItem={moveMenuItem}
+          categories={categories}
+          onClose={() => setMoveMenuItem(null)}
+          onMove={(newCategoryId) => {
+            setMenu(menu =>
+              menu.map(m =>
+                m.id === moveMenuItem.id
+                  ? { ...m, category_id: newCategoryId }
+                  : m
+              )
+            );
+            setMoveMenuItem(null);
+          }}
+        />
       )}
     </div>
   );
