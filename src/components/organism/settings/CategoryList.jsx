@@ -28,7 +28,6 @@ export default function CategoryList({ categories, activeCatId, setActiveCatId, 
                   <li
                     ref={provided.innerRef}
                     {...provided.draggableProps}
-                    // DİKKAT: dragHandleProps SADECE ☰ İKONUNA!
                     className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer border transition bg-white
         ${activeCatId === cat.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}
         ${snapshot.isDragging ? "shadow-lg bg-blue-100" : ""}`}

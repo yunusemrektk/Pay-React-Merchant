@@ -2,13 +2,32 @@ import React from "react";
 import CloudinaryUpload from "../organism/settings/CloudinaryUpload";
 import { CloseButton } from "../atom/CloseButton";
 
-export default function MenuModal({ onClose, menuModal, setMenuModal, handleMenuSave, saving }) {
+// categories propunu ekledik!
+export default function MenuModal({ onClose, menuModal, setMenuModal, handleMenuSave, saving, categories }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div className="bg-white rounded-xl shadow-lg p-6 pt-12 w-full max-w-sm relative">
                 <CloseButton onClick={onClose} className="absolute top-3 right-3" />
 
                 <form onSubmit={handleMenuSave} className="flex flex-col gap-4 mt-2">
+                    <select
+                        className="border rounded p-2"
+                        value={menuModal.form.category_id || ""}
+                        onChange={e =>
+                            setMenuModal({
+                                ...menuModal,
+                                form: { ...menuModal.form, category_id: e.target.value }
+                            })
+                        }
+                        required
+                    >
+                        <option value="" disabled>Kategori Seç</option>
+                        {categories.map(cat => (
+                            <option key={cat.id} value={cat.id}>
+                                {cat.label}
+                            </option>
+                        ))}
+                    </select>
                     <input
                         className="border rounded p-2"
                         value={menuModal.form.name}

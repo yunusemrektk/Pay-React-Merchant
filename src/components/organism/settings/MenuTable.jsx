@@ -4,10 +4,8 @@ import { EditIcon, DeleteIcon, SwapIcon } from "../main/Icons";
 
 export default function MenuTable({
   menu,
-  categories,
   openMenuModal,
   setShowMenuDel,
-  setMoveMenuItem,
   onSortMenu, // Sıralama callback'i parent'tan gelir
 }) {
   function handleDragEnd(result) {
@@ -38,83 +36,74 @@ export default function MenuTable({
                 </tr>
               </thead>
               <tbody>
-                {menu.length === 0 && (
+                {menu.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-3 text-center text-gray-400">
                       Bu kategoride ürün yok.
                     </td>
                   </tr>
+                ) : (
+                  menu.map((item, idx) => (
+                    <Draggable draggableId={item.id.toString()} index={idx} key={item.id}>
+                      {(provided, snapshot) => (
+                        <tr
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={`border-b last:border-none group hover:bg-blue-50 transition-colors ${snapshot.isDragging ? "bg-blue-100" : ""}`}
+                          style={{
+                            ...provided.draggableProps.style,
+                            minHeight: "48px",
+                            background: snapshot.isDragging ? "#DBEAFE" : undefined,
+                          }}
+                        >
+                          <td className="w-8 text-center align-middle">
+                            <span
+                              {...provided.dragHandleProps}
+                              className="cursor-grab text-lg text-gray-400 hover:text-gray-700"
+                              title="Sürükle"
+                            >
+                              ☰
+                            </span>
+                          </td>
+                          <td className="py-2 w-1/4">
+                            <span className="block truncate max-w-[160px] whitespace-nowrap overflow-hidden">
+                              {item.name}
+                            </span>
+                          </td>
+                          <td className="py-2 w-2/5">
+                            <span className="block truncate max-w-[260px] whitespace-nowrap overflow-hidden">
+                              {item.description}
+                            </span>
+                          </td>
+                          <td className="py-2 w-1/6 text-center">
+                            {parseFloat(item.price).toFixed(2)} ₺
+                          </td>
+                          <td className="py-2 w-28 min-w-[6rem] text-center whitespace-nowrap">
+                            <button
+                              className="inline-block mr-2 align-middle"
+                              title="Düzenle"
+                              onClick={() => openMenuModal({ edit: item })}
+                              tabIndex={0}
+                            >
+                              <EditIcon />
+                            </button>
+                            <button
+                              className="inline-block mr-2 align-middle"
+                              title="Sil"
+                              onClick={() => setShowMenuDel(item)}
+                              tabIndex={0}
+                            >
+                              <DeleteIcon />
+                            </button>
+                          </td>
+                        </tr>
+                      )}
+                    </Draggable>
+                  ))
                 )}
-                {menu.map((item, idx) => (
-                  <Draggable draggableId={item.id.toString()} index={idx} key={item.id}>
-                    {(provided, snapshot) => (
-                      <tr
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className={`border-b last:border-none group hover:bg-blue-50 transition-colors ${snapshot.isDragging ? "bg-blue-100" : ""}`}
-                        style={{
-                          ...provided.draggableProps.style,
-                          // Sürüklerken daralma önlemi:
-                          minHeight: "48px", // satır yüksekliği sabit tut
-                          background: snapshot.isDragging ? "#DBEAFE" : undefined,
-                        }}
-                      >
-                        {/* Drag handle hücresi */}
-                        <td className="w-8 text-center align-middle">
-                          <span
-                            {...provided.dragHandleProps}
-                            className="cursor-grab text-lg text-gray-400 hover:text-gray-700"
-                            title="Sürükle"
-                          >
-                            {/* Drag ikonunu burada özelleştirebilirsin */}
-                            ☰
-                          </span>
-                        </td>
-                        <td className="py-2 w-1/4">
-                          <span className="block truncate max-w-[160px] whitespace-nowrap overflow-hidden">
-                            {item.name}
-                          </span>
-                        </td>
-                        <td className="py-2 w-2/5">
-                          <span className="block truncate max-w-[260px] whitespace-nowrap overflow-hidden">
-                            {item.description}
-                          </span>
-                        </td>
-                        <td className="py-2 w-1/6 text-center">
-                          {parseFloat(item.price).toFixed(2)} ₺
-                        </td>
-                        <td className="py-2 w-28 min-w-[6rem] text-center whitespace-nowrap">
-                          <button
-                            className="inline-block mr-2 align-middle"
-                            title="Düzenle"
-                            onClick={() => openMenuModal({ edit: item })}
-                            tabIndex={0}
-                          >
-                            <EditIcon />
-                          </button>
-                          <button
-                            className="inline-block mr-2 align-middle"
-                            title="Sil"
-                            onClick={() => setShowMenuDel(item)}
-                            tabIndex={0}
-                          >
-                            <DeleteIcon />
-                          </button>
-                          <button
-                            className="inline-block align-middle"
-                            title="Kategorisini değiştir"
-                            onClick={() => setMoveMenuItem(item)}
-                            tabIndex={0}
-                          >
-                            <SwapIcon />
-                          </button>
-                        </td>
-                      </tr>
-                    )}
-                  </Draggable>
-                ))}
                 {provided.placeholder}
               </tbody>
+
             </table>
           </div>
         )}

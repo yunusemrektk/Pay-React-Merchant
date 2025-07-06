@@ -6,8 +6,9 @@ import { categories as initialCategories, menu_items as initialMenu } from "../.
 import CategoryList from "./CategoryList";
 import MenuTable from "./MenuTable";
 import AllMenuList from "./AllMenuList";
-import MenuModal from "../../Modals/MenuModal";
 import CategoryModal from "../../Modals/CategoryModal";
+
+import MenuModal from "../../Modals/MenuModal";
 import ConfirmModal from "../../Modals/ConfirmModal";
 import MoveMenuModal from "../../modals/MoveMenuModal";
 import { uploadMenuImage } from "../../../services/menuService";
@@ -20,8 +21,9 @@ export default function CategoryMenuSettings() {
   const [categories, setCategories] = useState([...initialCategories]);
   const [menu, setMenu] = useState([...initialMenu]);
   const [activeCatId, setActiveCatId] = useState(categories[0]?.id || null);
-  const activeMerchantId = "merc1"; // Dinamik yapabilirsin
   const [catModal, setCatModal] = useState({ open: false, edit: null, value: "" });
+
+  const activeMerchantId = "merc1"; // Dinamik yapabilirsin
   const [showCatDel, setShowCatDel] = useState(null);
   const [menuModal, setMenuModal] = useState({
     open: false, edit: null,
@@ -72,14 +74,29 @@ export default function CategoryMenuSettings() {
       open: true,
       edit,
       form: edit
-        ? { name: edit.name, description: edit.description, price: edit.price, image_file: null, image_path: edit.image_path || "" }
-        : { name: "", description: "", price: "", image_file: null, image_path: "" }
+        ? {
+          name: edit.name,
+          description: edit.description,
+          price: edit.price,
+          image_file: null,
+          image_path: edit.image_path || "",
+          category_id: edit.category_id, 
+        }
+        : {
+          name: "",
+          description: "",
+          price: "",
+          image_file: null,
+          image_path: "",
+          category_id: activeCatId,
+        }
     });
   }
 
+
   async function handleMenuSave(e) {
     e.preventDefault();
-    if (!menuModal.form.name.trim() || !activeCatId) return;
+    if (!menuModal.form.name.trim() || !menuModal.form.category_id) return;
     setSaving(true);
 
     let imageUrl = menuModal.form.image_path;
@@ -95,10 +112,19 @@ export default function CategoryMenuSettings() {
       }
     }
 
+    console.log("menumodal",menuModal)
+    console.log("handleSave",e)
+
     if (menuModal.edit) {
       setMenu(menu.map(m =>
         m.id === menuModal.edit.id
-          ? { ...m, ...menuModal.form, price: Number(menuModal.form.price), image_path: imageUrl }
+          ? {
+            ...m,
+            ...menuModal.form,
+            price: Number(menuModal.form.price),
+            image_path: imageUrl,
+            category_id: Number(menuModal.form.category_id) // kategori id'si güncellendi
+          }
           : m
       ));
     } else {
@@ -106,7 +132,7 @@ export default function CategoryMenuSettings() {
         ...menu,
         {
           id: newItemId,
-          category_id: activeCatId,
+          category_id: Number(menuModal.form.category_id),
           name: menuModal.form.name,
           description: menuModal.form.description,
           price: Number(menuModal.form.price),
@@ -117,9 +143,14 @@ export default function CategoryMenuSettings() {
       ]);
     }
 
+    if (menuModal.form.category_id && menuModal.form.category_id !== activeCatId) {
+      setActiveCatId(Number(menuModal.form.category_id));
+    }
+
     setSaving(false);
-    setMenuModal({ open: false, edit: null, form: { name: "", description: "", price: "", image_file: null, image_path: "" } });
+    setMenuModal({ open: false, edit: null, form: { name: "", description: "", price: "", image_file: null, image_path: "", category_id: "" } });
   }
+
 
   function handleDeleteMenu() {
     setMenu(menu.filter(m => m.id !== showMenuDel.id));
@@ -216,7 +247,6 @@ export default function CategoryMenuSettings() {
         </div>
       </div>
 
-      {/* Modals */}
       {catModal.open && (
         <CategoryModal
           onClose={() => setCatModal({ open: false, edit: null, value: "" })}
@@ -232,6 +262,7 @@ export default function CategoryMenuSettings() {
           setMenuModal={setMenuModal}
           handleMenuSave={handleMenuSave}
           saving={saving}
+          categories={categories}
         />
       )}
       {showCatDel && (
