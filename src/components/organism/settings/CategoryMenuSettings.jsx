@@ -11,8 +11,8 @@ import CategoryModal from "../../Modals/CategoryModal";
 import ConfirmModal from "../../Modals/ConfirmModal";
 import MoveMenuModal from "../../modals/MoveMenuModal";
 import { uploadMenuImage } from "../../../services/menuService";
-
-function uniqId() {
+import ErrorModal from "../../modals/ErrorModal.jsx";
+export function uniqId() {
   return Date.now() + Math.floor(Math.random() * 1000);
 }
 
@@ -30,6 +30,7 @@ export default function CategoryMenuSettings() {
   const [showMenuDel, setShowMenuDel] = useState(null);
   const [saving, setSaving] = useState(false);
   const [moveMenuItem, setMoveMenuItem] = useState(null);
+  const [error, setError] = useState(null);
 
   // Kategori işlemleri
   function openCatModal(cat) {
@@ -82,12 +83,13 @@ export default function CategoryMenuSettings() {
     setSaving(true);
 
     let imageUrl = menuModal.form.image_path;
+    let newItemId = menuModal.edit ? menuModal.edit.id : uniqId();
 
     if (menuModal.form.image_file) {
       try {
-        imageUrl = await uploadMenuImage(menuModal.form.image_file, activeMerchantId);
+        imageUrl = await uploadMenuImage(menuModal.form.image_file, activeMerchantId, newItemId);
       } catch (err) {
-        alert("Resim yüklenemedi!");
+        setError("Resim yüklenemedi. Lütfen daha sonra tekrar deneyin.");
         setSaving(false);
         return;
       }
@@ -103,7 +105,7 @@ export default function CategoryMenuSettings() {
       setMenu([
         ...menu,
         {
-          id: uniqId(),
+          id: newItemId,
           category_id: activeCatId,
           name: menuModal.form.name,
           description: menuModal.form.description,
@@ -137,7 +139,7 @@ export default function CategoryMenuSettings() {
       <div className="w-full md:w-64 flex-shrink-0 mb-4 md:mb-0">
         <div className="flex items-center justify-between mb-2 sticky top-0 z-10 bg-[#F7FAFC] pb-2">
           <h3 className="font-bold text-lg">Kategoriler</h3>
-          <button onClick={() => openCatModal(null)} className="bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 text-sm">+ Yeni</button>
+          <button onClick={() => openCatModal(null)} className="bg-blue-600 text-white px-2 py-2 rounded hover:bg-blue-700 text-sm">+ Yeni</button>
         </div>
         <CategoryList
           categories={categories}
@@ -152,12 +154,12 @@ export default function CategoryMenuSettings() {
       {/* Sağ Panel */}
       <div className="flex-1 flex flex-col">
         <div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+          <div className="flex items-center justify-between mb-2 sticky top-0 z-10 bg-[#F7FAFC] pb-2">
             <h3 className="font-bold text-lg">
               {categories.find(c => c.id === activeCatId)?.label || "Kategori"} Ürünleri
             </h3>
             <button
-              className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm"
+              className="bg-blue-600 text-white px-2 py-2 rounded hover:bg-blue-700 text-sm"
               onClick={() => openMenuModal({})}
               disabled={!activeCatId}
             >
@@ -253,6 +255,15 @@ export default function CategoryMenuSettings() {
             );
             setMoveMenuItem(null);
           }}
+        />
+      )}
+
+      {error && (
+        <ErrorModal
+          open={!!error}
+          onClose={() => setError(null)}
+          message={error}
+          title="Yükleme Hatası"
         />
       )}
     </div>
