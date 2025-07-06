@@ -8,7 +8,9 @@ export default function MenuModal({ onClose, menuModal, setMenuModal, handleMenu
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
             <div className="bg-white rounded-xl shadow-lg p-6 pt-12 w-full max-w-sm relative">
                 <CloseButton onClick={onClose} className="absolute top-3 right-3" />
-
+                <h3 className="absolute top-3 left-0 w-full text-center font-semibold text-lg text-gray-700 pointer-events-none">
+                    {menuModal.edit ? "Ürünü Düzenle" : "Yeni Ürün"}
+                </h3>
                 <form onSubmit={handleMenuSave} className="flex flex-col gap-4 mt-2">
                     <select
                         className="border rounded p-2"
