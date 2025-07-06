@@ -11,132 +11,136 @@ import CategoryModal from "../../Modals/CategoryModal";
 import ConfirmModal from "../../Modals/ConfirmModal";
 
 function uniqId() {
-    return Date.now() + Math.floor(Math.random() * 1000);
+  return Date.now() + Math.floor(Math.random() * 1000);
 }
 
 export default function CategoryMenuSettings() {
-    const [categories, setCategories] = useState([...initialCategories]);
-    const [menu, setMenu] = useState([...initialMenu]);
-    const [activeCatId, setActiveCatId] = useState(categories[0]?.id || null);
-    const activeMerchantId = "merc1"; // Dinamik yapabilirsin
-    const [catModal, setCatModal] = useState({ open: false, edit: null, value: "" });
-    const [showCatDel, setShowCatDel] = useState(null);
-    const [menuModal, setMenuModal] = useState({
-        open: false, edit: null,
-        form: { name: "", description: "", price: "", image_file: null, image_path: "" }
+  const [categories, setCategories] = useState([...initialCategories]);
+  const [menu, setMenu] = useState([...initialMenu]);
+  const [activeCatId, setActiveCatId] = useState(categories[0]?.id || null);
+  const activeMerchantId = "merc1"; // Dinamik yapabilirsin
+  const [catModal, setCatModal] = useState({ open: false, edit: null, value: "" });
+  const [showCatDel, setShowCatDel] = useState(null);
+  const [menuModal, setMenuModal] = useState({
+    open: false, edit: null,
+    form: { name: "", description: "", price: "", image_file: null, image_path: "" }
+  });
+  const [showMenuDel, setShowMenuDel] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [moveMenuItem, setMoveMenuItem] = useState(null);
+
+  // Kategori işlemleri
+  function openCatModal(cat) {
+    setCatModal({
+      open: true,
+      edit: cat || null,
+      value: cat ? cat.label : ""
     });
-    const [showMenuDel, setShowMenuDel] = useState(null);
-    const [saving, setSaving] = useState(false);
-    const [moveMenuItem, setMoveMenuItem] = useState(null);
-
-    // Kategori işlemleri
-    function openCatModal(cat) {
-        setCatModal({
-            open: true,
-            edit: cat || null,
-            value: cat ? cat.label : ""
-        });
+  }
+  function handleCatSave(e) {
+    e.preventDefault();
+    if (!catModal.value.trim()) return;
+    if (catModal.edit) {
+      setCategories(categories.map(cat =>
+        cat.id === catModal.edit.id ? { ...cat, label: catModal.value } : cat
+      ));
+    } else {
+      const newCat = {
+        id: uniqId(),
+        category_key: catModal.value.trim().toLowerCase().replace(/\s+/g, "-"),
+        label: catModal.value.trim(),
+        sort_order: categories.length + 1,
+      };
+      setCategories([...categories, newCat]);
+      setActiveCatId(newCat.id);
     }
-    function handleCatSave(e) {
-        e.preventDefault();
-        if (!catModal.value.trim()) return;
-        if (catModal.edit) {
-            setCategories(categories.map(cat =>
-                cat.id === catModal.edit.id ? { ...cat, label: catModal.value } : cat
-            ));
-        } else {
-            const newCat = {
-                id: uniqId(),
-                category_key: catModal.value.trim().toLowerCase().replace(/\s+/g, "-"),
-                label: catModal.value.trim(),
-                sort_order: categories.length + 1,
-            };
-            setCategories([...categories, newCat]);
-            setActiveCatId(newCat.id);
-        }
-        setCatModal({ open: false, edit: null, value: "" });
-    }
-    function handleDeleteCategory() {
-        setCategories(categories.filter(cat => cat.id !== showCatDel.id));
-        setMenu(menu.filter(m => m.category_id !== showCatDel.id));
-        setShowCatDel(null);
-        setActiveCatId(categories.filter(cat => cat.id !== showCatDel.id)[0]?.id || null);
-    }
+    setCatModal({ open: false, edit: null, value: "" });
+  }
+  function handleDeleteCategory() {
+    setCategories(categories.filter(cat => cat.id !== showCatDel.id));
+    setMenu(menu.filter(m => m.category_id !== showCatDel.id));
+    setShowCatDel(null);
+    setActiveCatId(categories.filter(cat => cat.id !== showCatDel.id)[0]?.id || null);
+  }
 
-    // Menü işlemleri
-    function openMenuModal({ edit = null } = {}) {
-        setMenuModal({
-            open: true,
-            edit,
-            form: edit
-                ? { name: edit.name, description: edit.description, price: edit.price, image_file: null, image_path: edit.image_path || "" }
-                : { name: "", description: "", price: "", image_file: null, image_path: "" }
-        });
-    }
+  // Menü işlemleri
+  function openMenuModal({ edit = null } = {}) {
+    setMenuModal({
+      open: true,
+      edit,
+      form: edit
+        ? { name: edit.name, description: edit.description, price: edit.price, image_file: null, image_path: edit.image_path || "" }
+        : { name: "", description: "", price: "", image_file: null, image_path: "" }
+    });
+  }
 
-    async function handleMenuSave(e) {
-        e.preventDefault();
-        if (!menuModal.form.name.trim() || !activeCatId) return;
-        setSaving(true);
+  async function handleMenuSave(e) {
+    e.preventDefault();
+    if (!menuModal.form.name.trim() || !activeCatId) return;
+    setSaving(true);
 
-        let imageUrl = menuModal.form.image_path;
+    let imageUrl = menuModal.form.image_path;
 
-        if (menuModal.form.image_file) {
-            try {
-                const formData = new FormData();
-                formData.append('file', menuModal.form.image_file);
-                formData.append('upload_preset', 'merchant-items');
-                if (activeMerchantId) {
-                    formData.append('folder', activeMerchantId);
-                }
-
-                const res = await axios.post(
-                    'https://api.cloudinary.com/v1_1/dw5hdpb6v/image/upload',
-                    formData
-                );
-                imageUrl = res.data.secure_url;
-            } catch (err) {
-                alert("Resim yüklenemedi!");
-                setSaving(false);
-                return;
-            }
+    if (menuModal.form.image_file) {
+      try {
+        const formData = new FormData();
+        formData.append('file', menuModal.form.image_file);
+        formData.append('upload_preset', 'merchant-items');
+        if (activeMerchantId) {
+          formData.append('folder', activeMerchantId);
         }
 
-        if (menuModal.edit) {
-            setMenu(menu.map(m =>
-                m.id === menuModal.edit.id
-                    ? { ...m, ...menuModal.form, price: Number(menuModal.form.price), image_path: imageUrl }
-                    : m
-            ));
-        } else {
-            setMenu([
-                ...menu,
-                {
-                    id: uniqId(),
-                    category_id: activeCatId,
-                    name: menuModal.form.name,
-                    description: menuModal.form.description,
-                    price: Number(menuModal.form.price),
-                    image_path: imageUrl,
-                    like_count: 0,
-                    created_at: new Date().toISOString().slice(0, 16).replace("T", " "),
-                },
-            ]);
-        }
-
+        const res = await axios.post(
+          'https://api.cloudinary.com/v1_1/dw5hdpb6v/image/upload',
+          formData
+        );
+        imageUrl = res.data.secure_url;
+      } catch (err) {
+        alert("Resim yüklenemedi!");
         setSaving(false);
-        setMenuModal({ open: false, edit: null, form: { name: "", description: "", price: "", image_file: null, image_path: "" } });
+        return;
+      }
     }
 
-    function handleDeleteMenu() {
-        setMenu(menu.filter(m => m.id !== showMenuDel.id));
-        setShowMenuDel(null);
+    if (menuModal.edit) {
+      setMenu(menu.map(m =>
+        m.id === menuModal.edit.id
+          ? { ...m, ...menuModal.form, price: Number(menuModal.form.price), image_path: imageUrl }
+          : m
+      ));
+    } else {
+      setMenu([
+        ...menu,
+        {
+          id: uniqId(),
+          category_id: activeCatId,
+          name: menuModal.form.name,
+          description: menuModal.form.description,
+          price: Number(menuModal.form.price),
+          image_path: imageUrl,
+          like_count: 0,
+          created_at: new Date().toISOString().slice(0, 16).replace("T", " "),
+        },
+      ]);
     }
 
-    // Aktif kategorinin menüleri
-    const filteredMenu = menu.filter(m => m.category_id === activeCatId);
+    setSaving(false);
+    setMenuModal({ open: false, edit: null, form: { name: "", description: "", price: "", image_file: null, image_path: "" } });
+  }
 
-   return (
+  function handleDeleteMenu() {
+    setMenu(menu.filter(m => m.id !== showMenuDel.id));
+    setShowMenuDel(null);
+  }
+
+  function handleCategorySort(newCategories) {
+    setCategories(newCategories);
+  }
+
+  // Aktif kategorinin menüleri
+  const filteredMenu = menu.filter(m => m.category_id === activeCatId);
+
+  return (
     <div className="flex flex-col md:flex-row gap-2 md:gap-8 w-full">
       {/* Sol Panel */}
       <div className="w-full md:w-64 flex-shrink-0 mb-4 md:mb-0">
@@ -150,6 +154,7 @@ export default function CategoryMenuSettings() {
           setActiveCatId={setActiveCatId}
           openCatModal={openCatModal}
           setShowCatDel={setShowCatDel}
+          onSort={handleCategorySort}
         />
       </div>
 

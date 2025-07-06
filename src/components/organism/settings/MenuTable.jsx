@@ -1,5 +1,5 @@
 import React from "react";
-import { EditIcon, DeleteIcon, SwapIcon } from "../main/Icons"; // Mutlaka doğru import et!
+import { EditIcon, DeleteIcon, SwapIcon } from "../main/Icons";
 
 export default function MenuTable({
   menu,
@@ -16,54 +16,56 @@ export default function MenuTable({
             <th className="py-2 text-left w-1/4">Ürün</th>
             <th className="py-2 text-left w-2/5">Açıklama</th>
             <th className="py-2 text-center w-1/6">Fiyat</th>
-            <th className="py-2 w-16 text-center"></th> {/* Action icons sütunu */}
+            <th className="py-2 w-16 text-center"></th>
           </tr>
         </thead>
+        <tbody>
+          {/* Eğer hiç ürün yoksa sadece uyarı satırı */}
+          {menu.length === 0 && (
+            <tr>
+              <td colSpan={4} className="py-3 text-center text-gray-400">
+                Bu kategoride ürün yok.
+              </td>
+            </tr>
+          )}
+          {/* Her bir ürün için satır */}
+          {menu.map((item) => (
+            <tr key={item.id} className="border-b last:border-none group hover:bg-blue-50">
+              <td className="py-2 w-1/4">{item.name}</td>
+              <td className="py-2 w-2/5">{item.description}</td>
+              <td className="py-2 w-1/6 text-center">
+                {parseFloat(item.price).toFixed(2)} ₺
+              </td>
+              <td className="py-2 w-16 text-center">
+                <button
+                  className="inline-block mr-2 align-middle"
+                  title="Düzenle"
+                  onClick={() => openMenuModal({ edit: item })}
+                  tabIndex={0}
+                >
+                  <EditIcon />
+                </button>
+                <button
+                  className="inline-block mr-2 align-middle"
+                  title="Sil"
+                  onClick={() => setShowMenuDel(item)}
+                  tabIndex={0}
+                >
+                  <DeleteIcon />
+                </button>
+                <button
+                  className="inline-block align-middle"
+                  title="Kategorisini değiştir"
+                  onClick={() => setMoveMenuItem(item)}
+                  tabIndex={0}
+                >
+                  <SwapIcon />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
       </table>
-      <div className="overflow-y-auto" style={{ maxHeight: "260px" }}>
-        <table className="w-full text-sm table-fixed">
-          <tbody>
-            {menu.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="py-3 text-center text-gray-400">
-                  Bu kategoride ürün yok.
-                </td>
-              </tr>
-            ) : (
-              menu.map((item) => (
-                <tr key={item.id} className="border-b last:border-none group hover:bg-blue-50">
-                  <td className="py-2 w-1/4">{item.name}</td>
-                  <td className="py-2 w-2/5">{item.description}</td>
-                  <td className="py-2 w-1/6 text-center">{parseFloat(item.price).toFixed(2)} ₺</td>
-                  <td className="py-2 w-16 text-center">
-                    <button
-                      className="inline-block mr-2 align-middle"
-                      title="Düzenle"
-                      onClick={() => openMenuModal({ edit: item })}
-                    >
-                      <EditIcon />
-                    </button>
-                    <button
-                      className="inline-block mr-2 align-middle"
-                      title="Sil"
-                      onClick={() => setShowMenuDel(item)}
-                    >
-                      <DeleteIcon />
-                    </button>
-                    <button
-                      className="inline-block align-middle"
-                      title="Kategorisini değiştir"
-                      onClick={() => setMoveMenuItem(item)}
-                    >
-                      <SwapIcon />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 }
