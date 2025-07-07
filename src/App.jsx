@@ -1,10 +1,12 @@
-import React from "react";
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/organism/main/Sidebar";
 import OrderManagement from "./components/organism/orders/OrderManagement";
 import TableManager from "./components/organism/tables/TableManager";
-import Settings from "./pages/Settings";
+
+import SettingsLayout from "./pages/settings/SettingsLayout";
+import CategoriesSettings from "./pages/settings/categories";
+import MerchantSettings from "./pages/settings/merchant";
+import SettingsIndex from "./pages/settings/SettingsIndex";
 
 function App() {
   return (
@@ -15,7 +17,12 @@ function App() {
           <Route path="/" element={<Navigate to="/orders" replace />} />
           <Route path="/orders" element={<OrderManagement />} />
           <Route path="/tables" element={<TableManager />} />
-          <Route path="/settings" element={<Settings />} />
+
+          <Route path="/settings" element={<SettingsLayout />}>
+            <Route index element={<SettingsIndex />} />
+            <Route path="categories" element={<CategoriesSettings />} />
+            <Route path="merchant" element={<MerchantSettings />} />
+          </Route>
         </Routes>
       </div>
     </div>

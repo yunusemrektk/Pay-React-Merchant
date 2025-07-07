@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getCloudinaryUrl } from "../../../services/menuService";
+import { getCloudinaryUrl } from "../../services/menuService";
 
 export default function ProductThumbnail({ imagePath, alt }) {
   const [imgError, setImgError] = useState(false);

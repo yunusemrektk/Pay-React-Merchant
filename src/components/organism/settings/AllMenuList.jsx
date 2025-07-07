@@ -1,5 +1,5 @@
 import React from "react";
-import ProductThumbnail from "./ProductThumbnail";
+import ProductThumbnail from "../../molecules/ProductThumbnail";
 
 export default function AllMenuList({ categories, menu }) {
   return (

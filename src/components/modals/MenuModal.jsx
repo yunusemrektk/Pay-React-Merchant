@@ -1,5 +1,5 @@
 import React from "react";
-import CloudinaryUpload from "../organism/settings/CloudinaryUpload";
+import CloudinaryUpload from "../molecules/CloudinaryUpload";
 import { CloseButton } from "../atom/CloseButton";
 
 // categories propunu ekledik!

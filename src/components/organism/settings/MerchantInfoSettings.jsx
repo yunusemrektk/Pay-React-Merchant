@@ -3,7 +3,7 @@ import { merchants } from "../../../data/exampleData";
 import SuccessModal from "../../modals/SuccessModal";
 import ErrorModal from "../../modals/ErrorModal";
 import { uploadMenuImage } from "../../../services/menuService";
-import CloudinaryUpload from "../../organism/settings/CloudinaryUpload";
+import CloudinaryUpload from "../../molecules/CloudinaryUpload";
 
 export default function MerchantInfoSettings() {
   const [info, setInfo] = useState(merchants[0]);
@@ -25,8 +25,9 @@ export default function MerchantInfoSettings() {
     setSaving(true);
 
     let uploadedUrl = info.image_path;
-
-    if (info.image_file instanceof File) {
+    const isFile = info.image_file instanceof File;
+    
+    if (isFile) {
       try {
         uploadedUrl = await uploadMenuImage({
           file: info.image_file,
@@ -60,6 +61,10 @@ export default function MerchantInfoSettings() {
     });
 
     setSaving(false);
+  }
+
+  function closeModal() {
+    setModal((prev) => ({ ...prev, open: false }));
   }
 
   return (
@@ -118,7 +123,7 @@ export default function MerchantInfoSettings() {
       {modal.open && modal.type === "success" && (
         <SuccessModal
           open={modal.open}
-          onClose={() => setModal({ ...modal, open: false })}
+          onClose={closeModal}
           message={modal.message}
           title={modal.title}
         />
@@ -127,7 +132,7 @@ export default function MerchantInfoSettings() {
       {modal.open && modal.type === "error" && (
         <ErrorModal
           open={modal.open}
-          onClose={() => setModal({ ...modal, open: false })}
+          onClose={closeModal}
           message={modal.message}
           title={modal.title}
         />
