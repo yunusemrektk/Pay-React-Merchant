@@ -61,6 +61,7 @@ export default function MenuModal({ onClose, menuModal, setMenuModal, handleMenu
                     />
                     <CloudinaryUpload
                         file={menuModal.form.image_file}
+                        initialUrl={menuModal.form.image_path}
                         onFileSelect={file =>
                             setMenuModal({
                                 ...menuModal,

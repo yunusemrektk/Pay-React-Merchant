@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { merchants } from "../../../data/exampleData";
 import SuccessModal from "../../modals/SuccessModal";
 import ErrorModal from "../../modals/ErrorModal";
-import { uploadMenuImage } from "../../../services/menuService";
 import CloudinaryUpload from "../../molecules/CloudinaryUpload";
+import { uploadMerchantBanner } from "../../../services/merchantService";
 
 export default function MerchantInfoSettings() {
   const [info, setInfo] = useState(merchants[0]);
@@ -26,13 +26,12 @@ export default function MerchantInfoSettings() {
 
     let uploadedUrl = info.image_path;
     const isFile = info.image_file instanceof File;
-    
+
     if (isFile) {
       try {
-        uploadedUrl = await uploadMenuImage({
+        uploadedUrl = await uploadMerchantBanner({
           file: info.image_file,
-          merchantId: info.id || "merchant", // merchant id burada kullanılıyor
-          type: "banner",                   // banner tipi
+          merchantId: info.id || "merchant",
         });
       } catch (err) {
         setModal({
@@ -79,6 +78,7 @@ export default function MerchantInfoSettings() {
           <label className="block text-sm font-medium mb-1">Logo/Fotoğraf</label>
           <CloudinaryUpload
             file={info.image_file}
+            initialUrl={info.image_path}
             onFileSelect={(file) =>
               setInfo({
                 ...info,

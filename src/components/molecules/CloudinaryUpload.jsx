@@ -1,20 +1,25 @@
 import { useDropzone } from 'react-dropzone';
 import { useEffect, useState } from 'react';
 
-export default function CloudinaryUpload({ file, onFileSelect }) {
+export default function CloudinaryUpload({ file, onFileSelect, initialUrl = null }) {
   const [preview, setPreview] = useState(null);
 
   useEffect(() => {
-    if (!file) {
-      setPreview(null);
-      return;
-    }
-    const objectUrl = URL.createObjectURL(file);
-    setPreview(objectUrl);
+    if (file instanceof File) {
+      const objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl);
 
-    // Temizlik (memory leak olmasın)
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+
+    if (!file && initialUrl) {
+      setPreview(initialUrl);
+    }
+
+    if (!file && !initialUrl) {
+      setPreview(null);
+    }
+  }, [file, initialUrl]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
@@ -29,14 +34,15 @@ export default function CloudinaryUpload({ file, onFileSelect }) {
   return (
     <div
       {...getRootProps()}
-      className={`border-2 border-dashed rounded-lg p-4 min-h-48 flex flex-col items-center justify-center text-center cursor-pointer transition ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50'
-        }`}
+      className={`border-2 border-dashed rounded-lg p-4 min-h-48 flex flex-col items-center justify-center text-center cursor-pointer transition ${
+        isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50'
+      }`}
     >
       <input {...getInputProps()} />
       {preview ? (
         <img
           src={preview}
-          alt="Ürün görseli"
+          alt="Yüklenen görsel"
           className="mx-auto mb-2 max-h-64 rounded shadow"
         />
       ) : (

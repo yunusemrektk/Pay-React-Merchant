@@ -11,10 +11,10 @@ import CategoryModal from "../../Modals/CategoryModal";
 import MenuModal from "../../Modals/MenuModal";
 import ConfirmModal from "../../Modals/ConfirmModal";
 import MoveMenuModal from "../../modals/MoveMenuModal";
-import { uploadMenuImage } from "../../../services/menuService";
 
 import SuccessModal from "../../modals/SuccessModal";
 import ErrorModal from "../../modals/ErrorModal";
+import { uploadMenuItemImage } from "../../../services/menuItemService";
 
 export function uniqId() {
   return Date.now() + Math.floor(Math.random() * 1000);
@@ -115,7 +115,7 @@ export default function CategoryMenuSettings() {
 
     if (menuModal.form.image_file) {
       try {
-        imageUrl = await uploadMenuImage({
+        imageUrl = await uploadMenuItemImage({
           file: menuModal.form.image_file,
           merchantId: activeMerchantId,
           type: "menu_item",
