@@ -38,11 +38,13 @@ export default function MenuModal({ onClose, menuModal, setMenuModal, handleMenu
                         placeholder="Ürün adı"
                         required
                     />
-                    <input
-                        className="border rounded p-2"
+                    <textarea
+                        className="border rounded p-2 resize-none"
                         value={menuModal.form.description}
                         onChange={e => setMenuModal({ ...menuModal, form: { ...menuModal.form, description: e.target.value } })}
                         placeholder="Açıklama"
+                        rows={3}
+                        maxLength={300}
                     />
                     <input
                         className="border rounded p-2"
