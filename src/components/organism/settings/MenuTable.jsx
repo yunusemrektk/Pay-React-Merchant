@@ -1,7 +1,7 @@
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { TableRow } from "../../atom/TableRow";
 import { EditIcon, DeleteIcon } from "../main/Icons";
+import { motion } from "framer-motion";
 
 export default function MenuTable({
   menu,
@@ -45,19 +45,24 @@ export default function MenuTable({
                   </tr>
                 ) : (
                   menu.map((item, idx) => (
-                    <Draggable draggableId={item.id.toString()} index={idx} key={item.id}>
+                    <Draggable
+                      key={item.id}
+                      draggableId={item.id.toString()}
+                      index={idx}
+                    >
                       {(provided, snapshot) => (
-                        <TableRow
+                        <motion.tr
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
+                          layout={!snapshot.isDragging} // 👈 drag sırasında layout animasyonunu kapat
+                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
                           className={`border-b last:border-none group hover:bg-blue-50 transition-colors ${
-                            snapshot.isDragging ? "bg-blue-100" : ""
+                            snapshot.isDragging ? "bg-blue-100 shadow-lg" : ""
                           }`}
                           style={{
                             ...provided.draggableProps.style,
                             minHeight: "48px",
-                            background: snapshot.isDragging ? "#DBEAFE" : undefined,
                           }}
                         >
                           <td className="w-8 text-center align-middle">
@@ -99,7 +104,7 @@ export default function MenuTable({
                               <DeleteIcon />
                             </button>
                           </td>
-                        </TableRow>
+                        </motion.tr>
                       )}
                     </Draggable>
                   ))

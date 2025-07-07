@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { categories as initialCategories, menu_items as initialMenu } from "../../../data/exampleData";
@@ -13,7 +12,10 @@ import MenuModal from "../../Modals/MenuModal";
 import ConfirmModal from "../../Modals/ConfirmModal";
 import MoveMenuModal from "../../modals/MoveMenuModal";
 import { uploadMenuImage } from "../../../services/menuService";
-import ErrorModal from "../../modals/ErrorModal.jsx";
+
+import SuccessModal from "../../modals/SuccessModal";
+import ErrorModal from "../../modals/ErrorModal";
+
 export function uniqId() {
   return Date.now() + Math.floor(Math.random() * 1000);
 }
@@ -24,7 +26,7 @@ export default function CategoryMenuSettings() {
   const [activeCatId, setActiveCatId] = useState(categories[0]?.id || null);
   const [catModal, setCatModal] = useState({ open: false, edit: null, value: "" });
 
-  const activeMerchantId = "merc1"; // Dinamik yapabilirsin
+  const activeMerchantId = "merc1";
   const [showCatDel, setShowCatDel] = useState(null);
   const [menuModal, setMenuModal] = useState({
     open: false, edit: null,
@@ -33,7 +35,13 @@ export default function CategoryMenuSettings() {
   const [showMenuDel, setShowMenuDel] = useState(null);
   const [saving, setSaving] = useState(false);
   const [moveMenuItem, setMoveMenuItem] = useState(null);
-  const [error, setError] = useState(null);
+
+  const [modal, setModal] = useState({
+    open: false,
+    type: null, // "success" | "error"
+    message: "",
+    title: "",
+  });
 
   // Kategori işlemleri
   function openCatModal(cat) {
@@ -43,6 +51,7 @@ export default function CategoryMenuSettings() {
       value: cat ? cat.label : ""
     });
   }
+
   function handleCatSave(e) {
     e.preventDefault();
     if (!catModal.value.trim()) return;
@@ -62,6 +71,7 @@ export default function CategoryMenuSettings() {
     }
     setCatModal({ open: false, edit: null, value: "" });
   }
+
   function handleDeleteCategory() {
     setCategories(categories.filter(cat => cat.id !== showCatDel.id));
     setMenu(menu.filter(m => m.category_id !== showCatDel.id));
@@ -94,26 +104,37 @@ export default function CategoryMenuSettings() {
     });
   }
 
-
   async function handleMenuSave(e) {
     e.preventDefault();
     if (!menuModal.form.name.trim() || !menuModal.form.category_id) return;
+
     setSaving(true);
 
     let imageUrl = menuModal.form.image_path;
-    let newItemId = menuModal.edit ? menuModal.edit.id : uniqId();
+    const newItemId = menuModal.edit ? menuModal.edit.id : uniqId();
 
     if (menuModal.form.image_file) {
       try {
-        imageUrl = await uploadMenuImage(menuModal.form.image_file, activeMerchantId, newItemId);
+        imageUrl = await uploadMenuImage({
+          file: menuModal.form.image_file,
+          merchantId: activeMerchantId,
+          type: "menu_item",
+          itemId: newItemId,
+        });
       } catch (err) {
-        setError("Resim yüklenemedi. Lütfen daha sonra tekrar deneyin.");
+        setModal({
+          open: true,
+          type: "error",
+          message: "Resim yüklenemedi. Lütfen daha sonra tekrar deneyin.",
+          title: "Yükleme Hatası",
+        });
         setSaving(false);
         return;
       }
     }
 
     if (menuModal.edit) {
+      // Düzenleme
       setMenu(menu.map(m =>
         m.id === menuModal.edit.id
           ? {
@@ -121,11 +142,12 @@ export default function CategoryMenuSettings() {
             ...menuModal.form,
             price: Number(menuModal.form.price),
             image_path: imageUrl,
-            category_id: Number(menuModal.form.category_id) // kategori id'si güncellendi
+            category_id: Number(menuModal.form.category_id)
           }
           : m
       ));
     } else {
+      // Yeni ekleme
       setMenu([
         ...menu,
         {
@@ -141,14 +163,35 @@ export default function CategoryMenuSettings() {
       ]);
     }
 
-    if (menuModal.form.category_id && menuModal.form.category_id !== activeCatId) {
+    if (
+      menuModal.form.category_id &&
+      menuModal.form.category_id !== activeCatId
+    ) {
       setActiveCatId(Number(menuModal.form.category_id));
     }
 
     setSaving(false);
-    setMenuModal({ open: false, edit: null, form: { name: "", description: "", price: "", image_file: null, image_path: "", category_id: "" } });
-  }
 
+    setMenuModal({
+      open: false,
+      edit: null,
+      form: {
+        name: "",
+        description: "",
+        price: "",
+        image_file: null,
+        image_path: "",
+        category_id: "",
+      },
+    });
+
+    setModal({
+      open: true,
+      type: "success",
+      message: "Ürün başarıyla kaydedildi!",
+      title: "Başarılı",
+    });
+  }
 
   function handleDeleteMenu() {
     setMenu(menu.filter(m => m.id !== showMenuDel.id));
@@ -203,29 +246,6 @@ export default function CategoryMenuSettings() {
             </button>
           </div>
 
-          {/* --- Responsive MenuTable --- */}
-          <div className="block md:hidden">
-            {/* Mobil görünüm için kartlar */}
-            {filteredMenu.length === 0 ? (
-              <div className="text-center text-gray-400 p-4">Bu kategoride ürün yok.</div>
-            ) : (
-              <div className="space-y-2">
-                {filteredMenu.map(item => (
-                  <div key={item.id} className="border rounded-lg p-3 flex flex-col bg-white">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">{item.name}</span>
-                      <div className="flex gap-2">
-                        <button onClick={() => openMenuModal({ edit: item })} title="Düzenle">✏️</button>
-                        <button onClick={() => setShowMenuDel(item)} title="Sil">🗑️</button>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-600">{item.description}</div>
-                    <div className="text-sm mt-1 font-mono">{parseFloat(item.price).toFixed(2)} ₺</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
           <div className="hidden md:block">
             <AnimatePresence mode="wait">
               <motion.div
@@ -245,11 +265,9 @@ export default function CategoryMenuSettings() {
                 />
               </motion.div>
             </AnimatePresence>
-
           </div>
         </div>
 
-        {/* AllMenuList mobilde gizli, masaüstünde göster */}
         <div className="hidden md:block mt-8">
           <AllMenuList categories={categories} menu={menu} />
         </div>
@@ -263,6 +281,7 @@ export default function CategoryMenuSettings() {
           handleCatSave={handleCatSave}
         />
       )}
+
       {menuModal.open && (
         <MenuModal
           onClose={() => setMenuModal({ open: false, edit: null, form: { name: "", description: "", price: "", image_file: null, image_path: "" } })}
@@ -273,6 +292,7 @@ export default function CategoryMenuSettings() {
           categories={categories}
         />
       )}
+
       {showCatDel && (
         <ConfirmModal
           text={`"${showCatDel.label}" kategorisini ve bağlı ürünleri silmek istiyor musunuz?`}
@@ -280,6 +300,7 @@ export default function CategoryMenuSettings() {
           onConfirm={handleDeleteCategory}
         />
       )}
+
       {showMenuDel && (
         <ConfirmModal
           text={`"${showMenuDel.name}" ürününü silmek istiyor musunuz?`}
@@ -287,6 +308,7 @@ export default function CategoryMenuSettings() {
           onConfirm={handleDeleteMenu}
         />
       )}
+
       {moveMenuItem && (
         <MoveMenuModal
           menuItem={moveMenuItem}
@@ -305,12 +327,21 @@ export default function CategoryMenuSettings() {
         />
       )}
 
-      {error && (
+      {modal.open && modal.type === "success" && (
+        <SuccessModal
+          open={modal.open}
+          onClose={() => setModal({ ...modal, open: false })}
+          message={modal.message}
+          title={modal.title}
+        />
+      )}
+
+      {modal.open && modal.type === "error" && (
         <ErrorModal
-          open={!!error}
-          onClose={() => setError(null)}
-          message={error}
-          title="Yükleme Hatası"
+          open={modal.open}
+          onClose={() => setModal({ ...modal, open: false })}
+          message={modal.message}
+          title={modal.title}
         />
       )}
     </div>

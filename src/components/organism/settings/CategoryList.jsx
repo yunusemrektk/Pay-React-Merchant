@@ -1,15 +1,22 @@
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { EditIcon, DeleteIcon } from "../main/Icons";
+import { motion } from "framer-motion";
 
-export default function CategoryList({ categories, activeCatId, setActiveCatId, openCatModal, setShowCatDel, onSort }) {
-  // Sürükle bırak sonrası yeni sıralamayı dışarıya bildir
+export default function CategoryList({
+  categories,
+  activeCatId,
+  setActiveCatId,
+  openCatModal,
+  setShowCatDel,
+  onSort,
+}) {
   function handleDragEnd(result) {
     if (!result.destination) return;
     const reordered = Array.from(categories);
     const [removed] = reordered.splice(result.source.index, 1);
     reordered.splice(result.destination.index, 0, removed);
-    if (onSort) onSort(reordered); // Parent'a bildir
+    if (onSort) onSort(reordered);
   }
 
   return (
@@ -20,28 +27,39 @@ export default function CategoryList({ categories, activeCatId, setActiveCatId, 
             ref={provided.innerRef}
             {...provided.droppableProps}
             className="space-y-2 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50"
-            style={{ overscrollBehavior: 'contain' }}
+            style={{ overscrollBehavior: "contain" }}
           >
             {categories.map((cat, index) => (
               <Draggable key={cat.id} draggableId={cat.id.toString()} index={index}>
                 {(provided, snapshot) => (
-                  <li
+                  <motion.li
                     ref={provided.innerRef}
                     {...provided.draggableProps}
-                    className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer border transition bg-white
-        ${activeCatId === cat.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}
-        ${snapshot.isDragging ? "shadow-lg bg-blue-100" : ""}`}
+                    layout={!snapshot.isDragging}
+                    transition={{ duration: 0.2 }}
+                    className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer border bg-white
+                      ${activeCatId === cat.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:bg-gray-50"}
+                      ${snapshot.isDragging ? "shadow-lg bg-blue-100" : ""}`}
                     onClick={() => setActiveCatId(cat.id)}
                   >
                     <span className="truncate">{cat.label}</span>
                     <div className="flex items-center gap-1 ml-2">
-                      <span onClick={e => { e.stopPropagation(); openCatModal(cat); }}>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openCatModal(cat);
+                        }}
+                      >
                         <EditIcon />
                       </span>
-                      <span onClick={e => { e.stopPropagation(); setShowCatDel(cat); }}>
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowCatDel(cat);
+                        }}
+                      >
                         <DeleteIcon />
                       </span>
-                      {/* Drag only by icon: */}
                       <span
                         className="ml-2 cursor-grab"
                         title="Sürükle ve sırala"
@@ -50,7 +68,7 @@ export default function CategoryList({ categories, activeCatId, setActiveCatId, 
                         ☰
                       </span>
                     </div>
-                  </li>
+                  </motion.li>
                 )}
               </Draggable>
             ))}
