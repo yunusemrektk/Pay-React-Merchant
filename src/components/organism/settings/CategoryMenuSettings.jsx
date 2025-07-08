@@ -141,7 +141,7 @@ export default function CategoryMenuSettings() {
             ...m,
             ...menuModal.form,
             price: Number(menuModal.form.price),
-            image_path: imageUrl,
+            image: imageUrl,
             category_id: Number(menuModal.form.category_id)
           }
           : m
@@ -156,7 +156,7 @@ export default function CategoryMenuSettings() {
           name: menuModal.form.name,
           description: menuModal.form.description,
           price: Number(menuModal.form.price),
-          image_path: imageUrl,
+          image: imageUrl,
           like_count: 0,
           created_at: new Date().toISOString().slice(0, 16).replace("T", " "),
         },

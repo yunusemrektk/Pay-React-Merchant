@@ -29,7 +29,7 @@ export default function AllMenuList({ categories, menu }) {
                     >
                       {/* Thumbnail */}
                       <div className="w-10 h-10 flex items-center justify-center bg-white border rounded shadow-sm overflow-hidden flex-shrink-0">
-                        <ProductThumbnail imagePath={prod.image_path} alt={prod.name} />
+                        <ProductThumbnail imagePath={prod.image} alt={prod.name} />
                       </div>
                       {/* Name */}
                       <span className="font-medium truncate">{prod.name}</span>
