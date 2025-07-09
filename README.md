@@ -1,3 +1,5 @@
+```mermaid
+
 flowchart TB
   subgraph "📱 Müşteri Uygulaması"
     Customer["React App(QR Menü → Sepet → Ödeme)"]
