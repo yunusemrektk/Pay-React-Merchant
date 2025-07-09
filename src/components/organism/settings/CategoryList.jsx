@@ -2,6 +2,7 @@ import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { EditIcon, DeleteIcon } from "../main/Icons";
 import { motion } from "framer-motion";
+import { Edit2, Trash2 } from "lucide-react";
 
 export default function CategoryList({
   categories,
@@ -50,7 +51,7 @@ export default function CategoryList({
                           openCatModal(cat);
                         }}
                       >
-                        <EditIcon />
+                        <Edit2 className="w-4 h-4 text-gray-500 hover:text-blue-600 transition" />
                       </span>
                       <span
                         onClick={(e) => {
@@ -58,7 +59,7 @@ export default function CategoryList({
                           setShowCatDel(cat);
                         }}
                       >
-                        <DeleteIcon />
+                        <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600 transition" />
                       </span>
                       <span
                         className="ml-2 cursor-grab"
