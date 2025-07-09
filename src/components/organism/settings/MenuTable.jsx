@@ -1,7 +1,7 @@
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { EditIcon, DeleteIcon } from "../main/Icons";
 import { motion } from "framer-motion";
+import { Edit2, Trash2, GripVertical } from "lucide-react";
 
 export default function MenuTable({
   menu,
@@ -55,53 +55,61 @@ export default function MenuTable({
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          layout={!snapshot.isDragging} // 👈 drag sırasında layout animasyonunu kapat
-                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                          className={`border-b last:border-none group hover:bg-blue-50 transition-colors ${
-                            snapshot.isDragging ? "bg-blue-100 shadow-lg" : ""
-                          }`}
-                          style={{
-                            ...provided.draggableProps.style,
-                            minHeight: "48px",
+                          // Sürükleme stili için:
+                          style={provided.draggableProps.style}
+                          layout={!snapshot.isDragging}
+                          transition={{
+                            type: "spring",
+                            stiffness: 500,
+                            damping: 30,
                           }}
+                          className={`
+                            border-b last:border-none group hover:bg-blue-50 transition-colors
+                            ${snapshot.isDragging ? "bg-blue-100 shadow-lg" : ""}
+                          `}
                         >
+                          {/* Drag Handle */}
                           <td className="w-8 text-center align-middle">
-                            <span
-                              className="cursor-grab text-lg text-gray-400 hover:text-gray-700"
-                              title="Sürükle"
-                            >
-                              ☰
-                            </span>
+                            <GripVertical
+                              className="mx-auto w-5 h-5 text-gray-400 hover:text-gray-600 cursor-grab"
+                              title="Sürükle & Sırala"
+                            />
                           </td>
+
+                          {/* Name */}
                           <td className="py-2 w-1/4">
-                            <span className="block truncate max-w-[160px] whitespace-nowrap overflow-hidden">
+                            <span className="block truncate max-w-[160px]">
                               {item.name}
                             </span>
                           </td>
+
+                          {/* Description */}
                           <td className="py-2 w-2/5">
-                            <span className="block truncate max-w-[260px] whitespace-nowrap overflow-hidden">
+                            <span className="block truncate max-w-[260px]">
                               {item.description}
                             </span>
                           </td>
+
+                          {/* Price */}
                           <td className="py-2 w-1/6 text-center">
                             {parseFloat(item.price).toFixed(2)} ₺
                           </td>
+
+                          {/* Actions */}
                           <td className="py-2 w-28 min-w-[6rem] text-center whitespace-nowrap">
                             <button
-                              className="inline-block mr-2 align-middle"
-                              title="Düzenle"
                               onClick={() => openMenuModal({ edit: item })}
-                              tabIndex={0}
+                              className="inline-flex items-center justify-center p-1 mr-2 rounded hover:bg-blue-50 transition"
+                              title="Düzenle"
                             >
-                              <EditIcon />
+                              <Edit2 className="w-5 h-5 text-gray-500 hover:text-blue-600" />
                             </button>
                             <button
-                              className="inline-block mr-2 align-middle"
-                              title="Sil"
                               onClick={() => setShowMenuDel(item)}
-                              tabIndex={0}
+                              className="inline-flex items-center justify-center p-1 rounded hover:bg-red-50 transition"
+                              title="Sil"
                             >
-                              <DeleteIcon />
+                              <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
                             </button>
                           </td>
                         </motion.tr>

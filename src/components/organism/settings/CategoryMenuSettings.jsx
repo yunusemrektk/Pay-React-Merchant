@@ -1,19 +1,28 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Plus,
+  List,
+  Layers,
+  Eye,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 
-import { categories as initialCategories, menu_items as initialMenu } from "../../../data/exampleData";
+import {
+  categories as initialCategories,
+  menu_items as initialMenu,
+} from "../../../data/exampleData";
 
 import CategoryList from "./CategoryList";
 import MenuTable from "./MenuTable";
 import AllMenuList from "./AllMenuList";
 import CategoryModal from "../../Modals/CategoryModal";
-
 import MenuModal from "../../Modals/MenuModal";
 import ConfirmModal from "../../Modals/ConfirmModal";
-import MoveMenuModal from "../../modals/MoveMenuModal";
-
 import SuccessModal from "../../modals/SuccessModal";
 import ErrorModal from "../../modals/ErrorModal";
+
 import { uploadMenuItemImage } from "../../../services/menuItemService";
 
 export function uniqId() {
@@ -24,17 +33,28 @@ export default function CategoryMenuSettings() {
   const [categories, setCategories] = useState([...initialCategories]);
   const [menu, setMenu] = useState([...initialMenu]);
   const [activeCatId, setActiveCatId] = useState(categories[0]?.id || null);
-  const [catModal, setCatModal] = useState({ open: false, edit: null, value: "" });
 
-  const activeMerchantId = "merc1";
+  const [catModal, setCatModal] = useState({
+    open: false,
+    edit: null,
+    value: "",
+  });
   const [showCatDel, setShowCatDel] = useState(null);
+
   const [menuModal, setMenuModal] = useState({
-    open: false, edit: null,
-    form: { name: "", description: "", price: "", image_file: null, image_path: "" }
+    open: false,
+    edit: null,
+    form: {
+      name: "",
+      description: "",
+      price: "",
+      image_file: null,
+      image_path: "",
+      category_id: "",
+    },
   });
   const [showMenuDel, setShowMenuDel] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [moveMenuItem, setMoveMenuItem] = useState(null);
 
   const [modal, setModal] = useState({
     open: false,
@@ -43,22 +63,25 @@ export default function CategoryMenuSettings() {
     title: "",
   });
 
-  // Kategori işlemleri
+  // --- Category handlers ---
   function openCatModal(cat) {
     setCatModal({
       open: true,
       edit: cat || null,
-      value: cat ? cat.label : ""
+      value: cat ? cat.label : "",
     });
   }
 
   function handleCatSave(e) {
     e.preventDefault();
     if (!catModal.value.trim()) return;
+
     if (catModal.edit) {
-      setCategories(categories.map(cat =>
-        cat.id === catModal.edit.id ? { ...cat, label: catModal.value } : cat
-      ));
+      setCategories((cats) =>
+        cats.map((c) =>
+          c.id === catModal.edit.id ? { ...c, label: catModal.value } : c
+        )
+      );
     } else {
       const newCat = {
         id: uniqId(),
@@ -66,20 +89,25 @@ export default function CategoryMenuSettings() {
         label: catModal.value.trim(),
         sort_order: categories.length + 1,
       };
-      setCategories([...categories, newCat]);
+      setCategories((cats) => [...cats, newCat]);
       setActiveCatId(newCat.id);
     }
+
     setCatModal({ open: false, edit: null, value: "" });
   }
 
   function handleDeleteCategory() {
-    setCategories(categories.filter(cat => cat.id !== showCatDel.id));
-    setMenu(menu.filter(m => m.category_id !== showCatDel.id));
+    setCategories((cats) =>
+      cats.filter((c) => c.id !== showCatDel.id)
+    );
+    setMenu((m) => m.filter((item) => item.category_id !== showCatDel.id));
     setShowCatDel(null);
-    setActiveCatId(categories.filter(cat => cat.id !== showCatDel.id)[0]?.id || null);
+    setActiveCatId((prev) =>
+      categories.filter((c) => c.id !== showCatDel.id)[0]?.id || null
+    );
   }
 
-  // Menü işlemleri
+  // --- Menu handlers ---
   function openMenuModal({ edit = null } = {}) {
     setMenuModal({
       open: true,
@@ -100,7 +128,7 @@ export default function CategoryMenuSettings() {
           image_file: null,
           image_path: "",
           category_id: activeCatId,
-        }
+        },
     });
   }
 
@@ -109,7 +137,6 @@ export default function CategoryMenuSettings() {
     if (!menuModal.form.name.trim() || !menuModal.form.category_id) return;
 
     setSaving(true);
-
     let imageUrl = menuModal.form.image_path;
     const newItemId = menuModal.edit ? menuModal.edit.id : uniqId();
 
@@ -117,11 +144,11 @@ export default function CategoryMenuSettings() {
       try {
         imageUrl = await uploadMenuItemImage({
           file: menuModal.form.image_file,
-          merchantId: activeMerchantId,
+          merchantId: "merc1",
           type: "menu_item",
           itemId: newItemId,
         });
-      } catch (err) {
+      } catch {
         setModal({
           open: true,
           type: "error",
@@ -133,45 +160,39 @@ export default function CategoryMenuSettings() {
       }
     }
 
-    if (menuModal.edit) {
-      // Düzenleme
-      setMenu(menu.map(m =>
-        m.id === menuModal.edit.id
-          ? {
-            ...m,
-            ...menuModal.form,
+    setMenu((items) =>
+      menuModal.edit
+        ? items.map((m) =>
+          m.id === menuModal.edit.id
+            ? {
+              ...m,
+              ...menuModal.form,
+              price: Number(menuModal.form.price),
+              image: imageUrl,
+              category_id: Number(menuModal.form.category_id),
+            }
+            : m
+        )
+        : [
+          ...items,
+          {
+            id: newItemId,
+            category_id: Number(menuModal.form.category_id),
+            name: menuModal.form.name,
+            description: menuModal.form.description,
             price: Number(menuModal.form.price),
             image: imageUrl,
-            category_id: Number(menuModal.form.category_id)
-          }
-          : m
-      ));
-    } else {
-      // Yeni ekleme
-      setMenu([
-        ...menu,
-        {
-          id: newItemId,
-          category_id: Number(menuModal.form.category_id),
-          name: menuModal.form.name,
-          description: menuModal.form.description,
-          price: Number(menuModal.form.price),
-          image: imageUrl,
-          like_count: 0,
-          created_at: new Date().toISOString().slice(0, 16).replace("T", " "),
-        },
-      ]);
-    }
+            like_count: 0,
+            created_at: new Date().toISOString().slice(0, 16).replace("T", " "),
+          },
+        ]
+    );
 
-    if (
-      menuModal.form.category_id &&
-      menuModal.form.category_id !== activeCatId
-    ) {
+    if (menuModal.form.category_id !== activeCatId) {
       setActiveCatId(Number(menuModal.form.category_id));
     }
 
     setSaving(false);
-
     setMenuModal({
       open: false,
       edit: null,
@@ -194,31 +215,39 @@ export default function CategoryMenuSettings() {
   }
 
   function handleDeleteMenu() {
-    setMenu(menu.filter(m => m.id !== showMenuDel.id));
+    setMenu((items) => items.filter((m) => m.id !== showMenuDel.id));
     setShowMenuDel(null);
   }
 
-  function handleCategorySort(newCategories) {
-    setCategories(newCategories);
+  function handleCategorySort(newCats) {
+    setCategories(newCats);
   }
 
-  function handleMenuSort(newMenuOrder) {
+  function handleMenuSort(newMenu) {
     setMenu((old) =>
       old
         .filter((m) => m.category_id !== activeCatId)
-        .concat(newMenuOrder)
+        .concat(newMenu)
     );
   }
 
-  const filteredMenu = menu.filter(m => m.category_id === activeCatId);
+  const filteredMenu = menu.filter((m) => m.category_id === activeCatId);
 
   return (
-    <div className="flex flex-col md:flex-row gap-2 md:gap-8 w-full">
-      {/* Sol Panel */}
+    <div className="flex flex-col md:flex-row gap-4 w-full">
+      {/* Left panel */}
       <div className="w-full md:w-64 flex-shrink-0 mb-4 md:mb-0">
         <div className="flex items-center justify-between mb-2 sticky top-0 z-10 bg-[#F7FAFC] pb-2">
-          <h3 className="font-bold text-lg">Kategoriler</h3>
-          <button onClick={() => openCatModal(null)} className="bg-blue-600 text-white px-2 py-2 rounded hover:bg-blue-700 text-sm">+ Yeni</button>
+          <h3 className="font-bold text-lg flex items-center">
+            <List className="w-5 h-5 text-gray-600 mr-2" />
+            Kategoriler
+          </h3>
+          <button
+            onClick={() => openCatModal(null)}
+            className="inline-flex items-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm"
+          >
+            <Plus className="w-4 h-4 mr-1" /> Yeni
+          </button>
         </div>
         <CategoryList
           categories={categories}
@@ -230,23 +259,26 @@ export default function CategoryMenuSettings() {
         />
       </div>
 
-      {/* Sağ Panel */}
+      {/* Right panel */}
       <div className="flex-1 flex flex-col">
-        <div>
-          <div className="flex items-center justify-between mb-2 sticky top-0 z-10 bg-[#F7FAFC] pb-2">
-            <h3 className="font-bold text-lg">
-              {categories.find(c => c.id === activeCatId)?.label || "Kategori"} Ürünleri
+        <div className="sticky top-0 z-10 bg-[#F7FAFC] pb-2 mb-2">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-lg flex items-center">
+              <Layers className="w-5 h-5 text-gray-600 mr-2" />
+              {categories.find((c) => c.id === activeCatId)?.label ||
+                "Kategori"}{" "}
+              Ürünleri
             </h3>
             <button
-              className="bg-blue-600 text-white px-2 py-2 rounded hover:bg-blue-700 text-sm"
               onClick={() => openMenuModal({})}
               disabled={!activeCatId}
+              className="inline-flex items-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              + Ürün Ekle
+              <Plus className="w-4 h-4 mr-1" /> Ürün Ekle
             </button>
           </div>
 
-          <div className="hidden md:block">
+          <div className="hidden md:block mt-2">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeCatId}
@@ -257,10 +289,8 @@ export default function CategoryMenuSettings() {
               >
                 <MenuTable
                   menu={filteredMenu}
-                  categories={categories}
                   openMenuModal={openMenuModal}
                   setShowMenuDel={setShowMenuDel}
-                  setMoveMenuItem={setMoveMenuItem}
                   onSortMenu={handleMenuSort}
                 />
               </motion.div>
@@ -269,10 +299,21 @@ export default function CategoryMenuSettings() {
         </div>
 
         <div className="hidden md:block mt-8">
-          <AllMenuList categories={categories} menu={menu} />
+          <div className="flex items-center mb-4">
+            <Eye className="w-6 h-6 text-blue-500 mr-2" />
+            <h2 className="text-lg font-semibold text-gray-800">
+              Tüm Ürünler Önizlemesi
+            </h2>
+          </div>
+          <AllMenuList
+            categories={categories}
+            menu={menu}
+            activeCatId={activeCatId}
+          />
         </div>
       </div>
 
+      {/* Modals */}
       {catModal.open && (
         <CategoryModal
           onClose={() => setCatModal({ open: false, edit: null, value: "" })}
@@ -284,23 +325,35 @@ export default function CategoryMenuSettings() {
 
       {menuModal.open && (
         <MenuModal
-          onClose={() => setMenuModal({ open: false, edit: null, form: { name: "", description: "", price: "", image_file: null, image_path: "" } })}
           menuModal={menuModal}
           setMenuModal={setMenuModal}
           handleMenuSave={handleMenuSave}
           saving={saving}
           categories={categories}
+          onClose={() =>
+            setMenuModal({
+              open: false,
+              edit: null,
+              form: {
+                name: "",
+                description: "",
+                price: "",
+                image_file: null,
+                image_path: "",
+                category_id: "",
+              },
+            })
+          }
         />
       )}
 
       {showCatDel && (
         <ConfirmModal
-          text={`"${showCatDel.label}" kategorisini ve bağlı ürünleri silmek istiyor musunuz?`}
+          text={`"${showCatDel.label}" kategorisini silmek istiyor musunuz?`}
           onCancel={() => setShowCatDel(null)}
           onConfirm={handleDeleteCategory}
         />
       )}
-
       {showMenuDel && (
         <ConfirmModal
           text={`"${showMenuDel.name}" ürününü silmek istiyor musunuz?`}
@@ -308,40 +361,23 @@ export default function CategoryMenuSettings() {
           onConfirm={handleDeleteMenu}
         />
       )}
-
-      {moveMenuItem && (
-        <MoveMenuModal
-          menuItem={moveMenuItem}
-          categories={categories}
-          onClose={() => setMoveMenuItem(null)}
-          onMove={(newCategoryId) => {
-            setMenu(menu =>
-              menu.map(m =>
-                m.id === moveMenuItem.id
-                  ? { ...m, category_id: newCategoryId }
-                  : m
-              )
-            );
-            setMoveMenuItem(null);
-          }}
-        />
-      )}
-
+      
       {modal.open && modal.type === "success" && (
         <SuccessModal
-          open={modal.open}
-          onClose={() => setModal({ ...modal, open: false })}
-          message={modal.message}
+          open
+          onClose={() => setModal((m) => ({ ...m, open: false }))}
+          icon={<CheckCircle className="text-green-500 w-6 h-6 mr-2" />}
           title={modal.title}
+          message={modal.message}
         />
       )}
-
       {modal.open && modal.type === "error" && (
         <ErrorModal
-          open={modal.open}
-          onClose={() => setModal({ ...modal, open: false })}
-          message={modal.message}
+          open
+          onClose={() => setModal((m) => ({ ...m, open: false }))}
+          icon={<AlertCircle className="text-red-500 w-6 h-6 mr-2" />}
           title={modal.title}
+          message={modal.message}
         />
       )}
     </div>

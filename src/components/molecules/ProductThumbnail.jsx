@@ -14,7 +14,7 @@ export default function ProductThumbnail({ imagePath, alt }) {
     <img
       src={getCloudinaryUrl(imagePath)}
       alt={alt}
-      className="object-cover w-10 h-10"
+      className="object-cover w-full h-full"
       onError={() => setImgError(true)}
       loading="lazy"
     />
