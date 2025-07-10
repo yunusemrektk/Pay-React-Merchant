@@ -2,7 +2,7 @@ import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Edit2, Trash2, GripVertical } from "lucide-react";
 
-export default function MenuTable({
+export default function MenuListGrid({
   menu,
   openMenuModal,
   setShowMenuDel,
@@ -11,110 +11,108 @@ export default function MenuTable({
   function handleDragEnd(result) {
     if (!result.destination) return;
     const reordered = Array.from(menu);
-    const [removed] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, removed);
+    const [moved] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, moved);
     onSortMenu(reordered);
   }
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <Droppable droppableId="menu-table">
+      <Droppable droppableId="menu-list-grid">
         {(provided) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className="bg-white rounded-xl shadow p-5 min-h-[320px] max-h-[320px] overflow-y-auto"
+            className="bg-white rounded-xl shadow p-5 h-[320px] overflow-y-auto"
           >
-            <table className="w-full text-sm table-fixed">
-              <thead>
-                <tr className="border-b">
-                  <th className="w-8" />
-                  <th className="py-2 text-left w-1/4">Ürün</th>
-                  <th className="py-2 text-left w-2/5 hidden md:table-cell">
-                    Açıklama
-                  </th>
-                  <th className="py-2 text-center w-1/6">Fiyat</th>
-                  <th className="py-2 w-16 text-center" />
-                </tr>
-              </thead>
-              <tbody>
-                {menu.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="py-3 text-center text-gray-400">
-                      Bu kategoride ürün yok.
-                    </td>
-                  </tr>
-                ) : (
-                  menu.map((item, idx) => (
-                    <Draggable
-                      key={item.id}
-                      draggableId={item.id.toString()}
-                      index={idx}
+            {/* Header */}
+            <div
+              className="
+                grid
+                grid-cols-[minmax(2rem,2rem)_minmax(0,1fr)_minmax(0,2fr)_minmax(0,2fr)_minmax(6rem,6rem)]
+                gap-x-8 gap-y-4 pb-2 border-b mb-2 font-semibold text-sm
+              "
+            >
+              <div />
+              <div>Ürün</div>
+              <div className="hidden md:block">Açıklama</div>
+              <div className="text-right">Fiyat</div>
+              <div className="text-center">İşlemler</div>
+            </div>
+
+            {/* Items */}
+            {menu.length === 0 && (
+              <div className="py-4 text-center text-gray-400">
+                Bu kategoride ürün yok.
+              </div>
+            )}
+
+            {menu.map((item, idx) => (
+              <Draggable
+                key={item.id}
+                draggableId={item.id.toString()}
+                index={idx}
+              >
+                {(prov, snapshot) => (
+                  <div
+                    ref={prov.innerRef}
+                    {...prov.draggableProps}
+                    style={prov.draggableProps.style}
+                    className={
+                      `
+                      grid
+                      grid-cols-[minmax(2rem,2rem)_minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)_minmax(6rem,6rem)]
+                      gap-x-6 gap-y-4 items-center
+                      h-12              /* Sabit yükseklik */
+                      px-2 rounded-lg transition-colors
+                      ${snapshot.isDragging ? "bg-blue-100 shadow-lg" : "hover:bg-blue-50"}
+                    `
+                    }
+                  >
+                    {/* Drag Handle */}
+                    <div
+                      {...prov.dragHandleProps}
+                      className="cursor-grab text-gray-400 text-center"
                     >
-                      {(provided, snapshot) => (
-                        <tr
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          style={provided.draggableProps.style}
-                          className={`border-b last:border-none transition-colors ${
-                            snapshot.isDragging
-                              ? "bg-blue-100 shadow-lg"
-                              : "hover:bg-blue-50"
-                          }`}
-                        >
-                          {/* Drag Handle */}
-                          <td className="w-8 text-center align-middle">
-                            <GripVertical
-                              className="mx-auto w-5 h-5 text-gray-400 hover:text-gray-600 cursor-grab"
-                              title="Sürükle & Sırala"
-                            />
-                          </td>
+                      <GripVertical className="w-5 h-5 mx-auto" />
+                    </div>
 
-                          {/* Name */}
-                          <td className="py-2 w-1/4">
-                            <span className="block truncate max-w-[160px]">
-                              {item.name}
-                            </span>
-                          </td>
+                    {/* Name */}
+                    <div className="truncate">{item.name}</div>
 
-                          {/* Description */}
-                          <td className="py-2 w-2/5 hidden md:table-cell">
-                            <span className="block truncate max-w-[260px]">
-                              {item.description}
-                            </span>
-                          </td>
+                    {/* Description */}
+                    <div className="truncate hidden md:block">
+                      {item.description}
+                    </div>
 
-                          {/* Price */}
-                          <td className="py-2 w-1/6 text-center">
-                            {parseFloat(item.price).toFixed(2)} ₺
-                          </td>
+                    {/* Price */}
+                    <div className="text-right">
+                      {parseFloat(item.price).toFixed(2)} ₺
+                    </div>
 
-                          {/* Actions */}
-                          <td className="py-2 w-28 min-w-[6rem] text-center whitespace-nowrap">
-                            <button
-                              onClick={() => openMenuModal({ edit: item })}
-                              className="inline-flex items-center justify-center p-1 mr-2 rounded hover:bg-blue-50 transition"
-                              title="Düzenle"
-                            >
-                              <Edit2 className="w-5 h-5 text-gray-500 hover:text-blue-600" />
-                            </button>
-                            <button
-                              onClick={() => setShowMenuDel(item)}
-                              className="inline-flex items-center justify-center p-1 rounded hover:bg-red-50 transition"
-                              title="Sil"
-                            >
-                              <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
-                            </button>
-                          </td>
-                        </tr>
-                      )}
-                    </Draggable>
-                  ))
+                    {/* Actions */}
+                    <div className="text-center space-x-2">
+                      <button
+                        onClick={() => openMenuModal({ edit: item })}
+                        className="p-1 rounded hover:bg-blue-50 transition"
+                        title="Düzenle"
+                      >
+                        <Edit2 className="w-5 h-5 text-gray-500 hover:text-blue-600" />
+                      </button>
+                      <button
+                        onClick={() => setShowMenuDel(item)}
+                        className="p-1 rounded hover:bg-red-50 transition"
+                        title="Sil"
+                      >
+                        <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
+                      </button>
+                    </div>
+                  </div>
                 )}
-                {provided.placeholder}
-              </tbody>
-            </table>
+              </Draggable>
+            ))}
+
+            {provided.placeholder}
           </div>
         )}
       </Droppable>

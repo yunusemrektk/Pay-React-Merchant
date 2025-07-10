@@ -15,14 +15,21 @@ import SuccessModal from "../../modals/SuccessModal";
 import ErrorModal from "../../modals/ErrorModal";
 
 import { uploadMenuItemImage } from "../../../services/menuItemService";
-
-export function uniqId() {
-  return Date.now() + Math.floor(Math.random() * 1000);
-}
+import { uniqId } from "../../../util/MenuItemUtil";
+import { useCategories } from "../../../hooks/useCategories";
+import MenuTableMobile from "./MenuTableMobile";
 
 export default function CategoryMenuSettings() {
+
+  const {
+    categories,
+    addCategory,
+    editCategory,
+    deleteCategory,
+    sortCategories,
+  } = useCategories(initialCategories);
+
   // --- State ---
-  const [categories, setCategories] = useState([...initialCategories]);
   const [menu, setMenu] = useState([...initialMenu]);
   const [activeCatId, setActiveCatId] = useState(categories[0]?.id || null);
 
@@ -44,56 +51,39 @@ export default function CategoryMenuSettings() {
 
   // --- Category Handlers ---
   function openCatModal(cat) {
-    setCatModal({ open: true, edit: cat, value: cat?.label || "" });
+    setCatModal({
+      open: true,
+      edit: cat || null,
+      value: cat ? cat.label : "",
+    });
+  }
+
+
+  function handleDeleteCategory() {
+    deleteCategory(showCatDel.id);
+    setShowCatDel(null);
+    setActiveCatId(categories[0]?.id || null);
+  }
+
+  function handleCategorySort(newCats) {
+    sortCategories(newCats);
+    setIsCatOrderDirty(true);
   }
 
   function handleCatSave(e) {
     e.preventDefault();
+      console.log("handleCatSave")
     if (!catModal.value.trim()) return;
     if (catModal.edit) {
-      setCategories(c =>
-        c.map(x => (x.id === catModal.edit.id ? { ...x, label: catModal.value } : x))
-      );
+      editCategory(catModal.edit.id, catModal.value);
     } else {
-      const newCat = {
-        id: uniqId(),
-        category_key: catModal.value.trim().toLowerCase().replace(/\s+/g, "-"),
-        label: catModal.value.trim(),
-        sort_order: categories.length + 1,
-      };
-      setCategories(c => [...c, newCat]);
-      setActiveCatId(newCat.id);
+      console.log("handleCatSave new cat",)
+      const newId = addCategory(catModal.value);
+      setActiveCatId(newId);
     }
     setCatModal({ open: false, edit: null, value: "" });
   }
 
-  function handleDeleteCategory() {
-    setCategories(c => c.filter(x => x.id !== showCatDel.id));
-    setMenu(m => m.filter(x => x.category_id !== showCatDel.id));
-    setShowCatDel(null);
-    setActiveCatId(categories.filter(x => x.id !== showCatDel.id)[0]?.id || null);
-  }
-
-  function handleCategorySort(newCats) {
-    setCategories(newCats);
-    setIsCatOrderDirty(true);
-  }
-
-  async function handleSaveCatOrder() {
-    try {
-      await fetch("/api/category/save-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(categories.map(c => c.id)),
-      });
-      setIsCatOrderDirty(false);
-      setModal({ open: true, type: "success", title: "Kaydedildi", message: "Kategori sıralaması kaydedildi." });
-    } catch {
-      setModal({ open: true, type: "error", title: "Hata", message: "Kategori sıralaması kaydedilemedi." });
-    }
-  }
-
-  // --- Menu Handlers ---
   function openMenuModal({ edit = null } = {}) {
     setMenuModal({
       open: true,
@@ -185,6 +175,20 @@ export default function CategoryMenuSettings() {
     setIsMenuOrderDirty(true);
   }
 
+  async function handleSaveCatOrder() {
+    try {
+      await fetch("/api/category/save-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(categories.map(c => c.id)),
+      });
+      setIsCatOrderDirty(false);
+      setModal({ open: true, type: "success", title: "Kaydedildi", message: "Kategori sıralaması kaydedildi." });
+    } catch {
+      setModal({ open: true, type: "error", title: "Hata", message: "Kategori sıralaması kaydedilemedi." });
+    }
+  }
+
   async function handleSaveMenuOrder() {
     try {
       await fetch("/api/menu/save-order", {
@@ -209,7 +213,7 @@ export default function CategoryMenuSettings() {
           <h3 className="flex items-center font-bold"><List className="w-5 h-5 mr-2" /> Kategoriler</h3>
           <div className="flex space-x-2">
             <button
-              onClick={() => openCatModal({})}
+              onClick={() => openCatModal()}
               disabled={!activeCatId}
               className="inline-flex items-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm disabled:opacity-50"
             >
@@ -249,15 +253,24 @@ export default function CategoryMenuSettings() {
               onClick={handleSaveMenuOrder}
               className="inline-flex items-center bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 text-sm"
             >
-              <SaveIcon className="w-4 h-4" /> 
+              <SaveIcon className="w-4 h-4" />
             </button>}
 
           </div>
         </div>
 
         {/* Masaüstü tablo */}
-        <div className="mt-2">
+        <div className="hidden md:block mt-2">
           <MenuTable
+            menu={filteredMenu}
+            openMenuModal={openMenuModal}
+            setShowMenuDel={setShowMenuDel}
+            onSortMenu={handleMenuSort}
+          />
+        </div>
+        
+        <div className="block md:hidden mt-2">
+          <MenuTableMobile
             menu={filteredMenu}
             openMenuModal={openMenuModal}
             setShowMenuDel={setShowMenuDel}

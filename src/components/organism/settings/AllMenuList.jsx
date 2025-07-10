@@ -32,8 +32,14 @@ export default function AllMenuList({ categories, menu, activeCatId }) {
                 <h3
                   className={`
                     text-xl font-semibold mb-4 pb-2
-                    ${activeCatId === cat.id ? "text-blue-700" : "text-gray-800"}
-                    border-b-2 ${activeCatId === cat.id ? "border-blue-200" : "border-gray-200"}
+                    ${
+                      activeCatId === cat.id ? "text-blue-700" : "text-gray-800"
+                    }
+                    border-b-2 ${
+                      activeCatId === cat.id
+                        ? "border-blue-200"
+                        : "border-gray-200"
+                    }
                   `}
                 >
                   {cat.label}
@@ -48,29 +54,34 @@ export default function AllMenuList({ categories, menu, activeCatId }) {
                   <div
                     className="
                       grid
-                      grid-cols-2            /* Mobilde her satırda 2 kart */
-                      sm:grid-cols-2         /* Küçük ekranlar için de 2 */
-                      md:grid-cols-3         /* Orta ekranlarda 3 */
-                      lg:grid-cols-4         /* Büyük ekranda 4 */
-                      xl:grid-cols-5         /* En geniş ekranda 5 */
-                      gap-4                  /* Kartlar arası boşluk */
+                      grid-cols-2
+                      sm:grid-cols-2
+                      md:grid-cols-3
+                      lg:grid-cols-4
+                      xl:grid-cols-5
+                      gap-4
                     "
                   >
                     {catProducts.map((prod) => (
                       <motion.div
                         key={prod.id}
                         whileHover={{ y: -4 }}
-                        className="relative bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hiddenflex flex-col"
+                        className="
+                          relative bg-white rounded-lg shadow-sm hover:shadow-md
+                          transition-shadow overflow-hidden flex flex-col
+                        "
                       >
-                        {/* Fiyat Rozeti – kartın sağ üst köşesinde */}
+                        {/* Fiyat Rozeti */}
                         <span
-                          className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 roundedz-10"
+                          className="absolute top-2 right-2 z-10
+                            bg-blue-600 text-white text-xs font-semibold
+                            px-2 py-1 rounded"
                         >
                           {parseFloat(prod.price).toFixed(2)} ₺
                         </span>
 
-                        {/* Resim */}
-                        <div className="w-full aspect-[3/2]">
+                        {/* Resim - rounded üst köşe */}
+                        <div className="w-full aspect-[3/2] overflow-hidden rounded-t-lg">
                           <ProductThumbnail
                             imagePath={prod.image}
                             alt={prod.name}
@@ -88,7 +99,6 @@ export default function AllMenuList({ categories, menu, activeCatId }) {
                           </p>
                         </div>
                       </motion.div>
-
                     ))}
                   </div>
                 )}
