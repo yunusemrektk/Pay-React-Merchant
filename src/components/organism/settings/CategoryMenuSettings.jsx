@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Plus,
-  List,
-  Layers,
-  Eye,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
-
+import { Plus, List, Layers, Save as SaveIcon, CheckCircle, AlertCircle } from "lucide-react";
 import {
   categories as initialCategories,
   menu_items as initialMenu,
@@ -30,57 +21,38 @@ export function uniqId() {
 }
 
 export default function CategoryMenuSettings() {
+  // --- State ---
   const [categories, setCategories] = useState([...initialCategories]);
   const [menu, setMenu] = useState([...initialMenu]);
   const [activeCatId, setActiveCatId] = useState(categories[0]?.id || null);
 
-  const [catModal, setCatModal] = useState({
-    open: false,
-    edit: null,
-    value: "",
-  });
-  const [showCatDel, setShowCatDel] = useState(null);
+  // “Dirty” flags
+  const [isCatOrderDirty, setIsCatOrderDirty] = useState(false);
+  const [isMenuOrderDirty, setIsMenuOrderDirty] = useState(false);
 
+  // Modals & others
+  const [catModal, setCatModal] = useState({ open: false, edit: null, value: "" });
+  const [showCatDel, setShowCatDel] = useState(null);
   const [menuModal, setMenuModal] = useState({
     open: false,
     edit: null,
-    form: {
-      name: "",
-      description: "",
-      price: "",
-      image_file: null,
-      image_path: "",
-      category_id: "",
-    },
+    form: { name: "", description: "", price: "", image_file: null, image_path: "", category_id: "" },
   });
   const [showMenuDel, setShowMenuDel] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [modal, setModal] = useState({ open: false, type: null, title: "", message: "" });
 
-  const [modal, setModal] = useState({
-    open: false,
-    type: null, // "success" | "error"
-    message: "",
-    title: "",
-  });
-
-  // --- Category handlers ---
+  // --- Category Handlers ---
   function openCatModal(cat) {
-    setCatModal({
-      open: true,
-      edit: cat || null,
-      value: cat ? cat.label : "",
-    });
+    setCatModal({ open: true, edit: cat, value: cat?.label || "" });
   }
 
   function handleCatSave(e) {
     e.preventDefault();
     if (!catModal.value.trim()) return;
-
     if (catModal.edit) {
-      setCategories((cats) =>
-        cats.map((c) =>
-          c.id === catModal.edit.id ? { ...c, label: catModal.value } : c
-        )
+      setCategories(c =>
+        c.map(x => (x.id === catModal.edit.id ? { ...x, label: catModal.value } : x))
       );
     } else {
       const newCat = {
@@ -89,25 +61,39 @@ export default function CategoryMenuSettings() {
         label: catModal.value.trim(),
         sort_order: categories.length + 1,
       };
-      setCategories((cats) => [...cats, newCat]);
+      setCategories(c => [...c, newCat]);
       setActiveCatId(newCat.id);
     }
-
     setCatModal({ open: false, edit: null, value: "" });
   }
 
   function handleDeleteCategory() {
-    setCategories((cats) =>
-      cats.filter((c) => c.id !== showCatDel.id)
-    );
-    setMenu((m) => m.filter((item) => item.category_id !== showCatDel.id));
+    setCategories(c => c.filter(x => x.id !== showCatDel.id));
+    setMenu(m => m.filter(x => x.category_id !== showCatDel.id));
     setShowCatDel(null);
-    setActiveCatId((prev) =>
-      categories.filter((c) => c.id !== showCatDel.id)[0]?.id || null
-    );
+    setActiveCatId(categories.filter(x => x.id !== showCatDel.id)[0]?.id || null);
   }
 
-  // --- Menu handlers ---
+  function handleCategorySort(newCats) {
+    setCategories(newCats);
+    setIsCatOrderDirty(true);
+  }
+
+  async function handleSaveCatOrder() {
+    try {
+      await fetch("/api/category/save-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(categories.map(c => c.id)),
+      });
+      setIsCatOrderDirty(false);
+      setModal({ open: true, type: "success", title: "Kaydedildi", message: "Kategori sıralaması kaydedildi." });
+    } catch {
+      setModal({ open: true, type: "error", title: "Hata", message: "Kategori sıralaması kaydedilemedi." });
+    }
+  }
+
+  // --- Menu Handlers ---
   function openMenuModal({ edit = null } = {}) {
     setMenuModal({
       open: true,
@@ -135,11 +121,10 @@ export default function CategoryMenuSettings() {
   async function handleMenuSave(e) {
     e.preventDefault();
     if (!menuModal.form.name.trim() || !menuModal.form.category_id) return;
-
     setSaving(true);
+
     let imageUrl = menuModal.form.image_path;
     const newItemId = menuModal.edit ? menuModal.edit.id : uniqId();
-
     if (menuModal.form.image_file) {
       try {
         imageUrl = await uploadMenuItemImage({
@@ -149,20 +134,15 @@ export default function CategoryMenuSettings() {
           itemId: newItemId,
         });
       } catch {
-        setModal({
-          open: true,
-          type: "error",
-          message: "Resim yüklenemedi. Lütfen daha sonra tekrar deneyin.",
-          title: "Yükleme Hatası",
-        });
+        setModal({ open: true, type: "error", title: "Yükleme Hatası", message: "Resim yüklenemedi." });
         setSaving(false);
         return;
       }
     }
 
-    setMenu((items) =>
+    setMenu(items =>
       menuModal.edit
-        ? items.map((m) =>
+        ? items.map(m =>
           m.id === menuModal.edit.id
             ? {
               ...m,
@@ -187,67 +167,61 @@ export default function CategoryMenuSettings() {
           },
         ]
     );
-
     if (menuModal.form.category_id !== activeCatId) {
       setActiveCatId(Number(menuModal.form.category_id));
     }
-
     setSaving(false);
-    setMenuModal({
-      open: false,
-      edit: null,
-      form: {
-        name: "",
-        description: "",
-        price: "",
-        image_file: null,
-        image_path: "",
-        category_id: "",
-      },
-    });
-
-    setModal({
-      open: true,
-      type: "success",
-      message: "Ürün başarıyla kaydedildi!",
-      title: "Başarılı",
-    });
+    setMenuModal({ open: false, edit: null, form: { name: "", description: "", price: "", image_file: null, image_path: "", category_id: "" } });
+    setModal({ open: true, type: "success", title: "Başarılı", message: "Ürün kaydedildi!" });
   }
 
   function handleDeleteMenu() {
-    setMenu((items) => items.filter((m) => m.id !== showMenuDel.id));
+    setMenu(items => items.filter(m => m.id !== showMenuDel.id));
     setShowMenuDel(null);
   }
 
-  function handleCategorySort(newCats) {
-    setCategories(newCats);
-  }
-
   function handleMenuSort(newMenu) {
-    setMenu((old) =>
-      old
-        .filter((m) => m.category_id !== activeCatId)
-        .concat(newMenu)
-    );
+    setMenu(old => [...old.filter(x => x.category_id !== activeCatId), ...newMenu]);
+    setIsMenuOrderDirty(true);
   }
 
-  const filteredMenu = menu.filter((m) => m.category_id === activeCatId);
+  async function handleSaveMenuOrder() {
+    try {
+      await fetch("/api/menu/save-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(menu.map(m => m.id)),
+      });
+      setIsMenuOrderDirty(false);
+      setModal({ open: true, type: "success", title: "Kaydedildi", message: "Ürün sıralaması kaydedildi." });
+    } catch {
+      setModal({ open: true, type: "error", title: "Hata", message: "Ürün sıralaması kaydedilemedi." });
+    }
+  }
+
+  const filteredMenu = menu.filter(m => m.category_id === activeCatId);
 
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full">
-      {/* Left panel */}
-      <div className="w-full md:w-64 flex-shrink-0 mb-4 md:mb-0">
-        <div className="flex items-center justify-between mb-2 sticky top-0 z-10 bg-[#F7FAFC] pb-2">
-          <h3 className="font-bold text-lg flex items-center">
-            <List className="w-5 h-5 text-gray-600 mr-2" />
-            Kategoriler
-          </h3>
-          <button
-            onClick={() => openCatModal(null)}
-            className="inline-flex items-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm"
-          >
-            <Plus className="w-4 h-4 mr-1" /> Yeni
-          </button>
+      {/* Left: Kategori */}
+      <div className="w-full md:w-64 mb-4 md:mb-0">
+        <div className="bg-[#F7FAFC] z-10 p-2 flex items-center justify-between mb-2">
+          <h3 className="flex items-center font-bold"><List className="w-5 h-5 mr-2" /> Kategoriler</h3>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => openCatModal({})}
+              disabled={!activeCatId}
+              className="inline-flex items-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm disabled:opacity-50"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            {isCatOrderDirty && <button
+              onClick={handleSaveCatOrder}
+              className="inline-flex items-center bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 text-sm"
+            >
+              <SaveIcon className="w-4 h-4" />
+            </button>}
+          </div>
         </div>
         <CategoryList
           categories={categories}
@@ -259,127 +233,50 @@ export default function CategoryMenuSettings() {
         />
       </div>
 
-      {/* Right panel */}
+      {/* Right: Ürün */}
       <div className="flex-1 flex flex-col">
-        <div className="sticky top-0 z-10 bg-[#F7FAFC] pb-2 mb-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-lg flex items-center">
-              <Layers className="w-5 h-5 text-gray-600 mr-2" />
-              {categories.find((c) => c.id === activeCatId)?.label ||
-                "Kategori"}{" "}
-              Ürünleri
-            </h3>
+        <div className="bg-[#F7FAFC] z-10 p-2 flex items-center justify-between mb-2">
+          <h3 className="flex items-center font-bold"><Layers className="w-5 h-5 mr-2" /> {categories.find(c => c.id === activeCatId)?.label || "Kategori"} Ürünleri</h3>
+          <div className="flex space-x-2">
             <button
               onClick={() => openMenuModal({})}
               disabled={!activeCatId}
-              className="inline-flex items-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm disabled:opacity-50"
             >
-              <Plus className="w-4 h-4 mr-1" /> Ürün Ekle
+              <Plus className="w-4 h-4" />
             </button>
-          </div>
+            {isMenuOrderDirty && <button
+              onClick={handleSaveMenuOrder}
+              className="inline-flex items-center bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 text-sm"
+            >
+              <SaveIcon className="w-4 h-4" /> 
+            </button>}
 
-          <div className="hidden md:block mt-2">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCatId}
-                initial={{ opacity: 0, y: 32 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -32 }}
-                transition={{ duration: 0.1 }}
-              >
-                <MenuTable
-                  menu={filteredMenu}
-                  openMenuModal={openMenuModal}
-                  setShowMenuDel={setShowMenuDel}
-                  onSortMenu={handleMenuSort}
-                />
-              </motion.div>
-            </AnimatePresence>
           </div>
         </div>
 
-        <div className="hidden md:block mt-8">
-          <div className="flex items-center mb-4">
-            <Eye className="w-6 h-6 text-blue-500 mr-2" />
-            <h2 className="text-lg font-semibold text-gray-800">
-              Tüm Ürünler Önizlemesi
-            </h2>
-          </div>
-          <AllMenuList
-            categories={categories}
-            menu={menu}
-            activeCatId={activeCatId}
+        {/* Masaüstü tablo */}
+        <div className="mt-2">
+          <MenuTable
+            menu={filteredMenu}
+            openMenuModal={openMenuModal}
+            setShowMenuDel={setShowMenuDel}
+            onSortMenu={handleMenuSort}
           />
+        </div>
+
+        <div className="mt-8">
+          <AllMenuList categories={categories} menu={menu} activeCatId={activeCatId} />
         </div>
       </div>
 
-      {/* Modals */}
-      {catModal.open && (
-        <CategoryModal
-          onClose={() => setCatModal({ open: false, edit: null, value: "" })}
-          catModal={catModal}
-          setCatModal={setCatModal}
-          handleCatSave={handleCatSave}
-        />
-      )}
-
-      {menuModal.open && (
-        <MenuModal
-          menuModal={menuModal}
-          setMenuModal={setMenuModal}
-          handleMenuSave={handleMenuSave}
-          saving={saving}
-          categories={categories}
-          onClose={() =>
-            setMenuModal({
-              open: false,
-              edit: null,
-              form: {
-                name: "",
-                description: "",
-                price: "",
-                image_file: null,
-                image_path: "",
-                category_id: "",
-              },
-            })
-          }
-        />
-      )}
-
-      {showCatDel && (
-        <ConfirmModal
-          text={`"${showCatDel.label}" kategorisini silmek istiyor musunuz?`}
-          onCancel={() => setShowCatDel(null)}
-          onConfirm={handleDeleteCategory}
-        />
-      )}
-      {showMenuDel && (
-        <ConfirmModal
-          text={`"${showMenuDel.name}" ürününü silmek istiyor musunuz?`}
-          onCancel={() => setShowMenuDel(null)}
-          onConfirm={handleDeleteMenu}
-        />
-      )}
-      
-      {modal.open && modal.type === "success" && (
-        <SuccessModal
-          open
-          onClose={() => setModal((m) => ({ ...m, open: false }))}
-          icon={<CheckCircle className="text-green-500 w-6 h-6 mr-2" />}
-          title={modal.title}
-          message={modal.message}
-        />
-      )}
-      {modal.open && modal.type === "error" && (
-        <ErrorModal
-          open
-          onClose={() => setModal((m) => ({ ...m, open: false }))}
-          icon={<AlertCircle className="text-red-500 w-6 h-6 mr-2" />}
-          title={modal.title}
-          message={modal.message}
-        />
-      )}
+      {/* Modals & Notifications */}
+      {catModal.open && <CategoryModal onClose={() => setCatModal({ open: false, edit: null, value: "" })} catModal={catModal} setCatModal={setCatModal} handleCatSave={handleCatSave} />}
+      {showCatDel && <ConfirmModal text={`"${showCatDel.label}" silinsin mi?`} onCancel={() => setShowCatDel(null)} onConfirm={handleDeleteCategory} />}
+      {menuModal.open && <MenuModal menuModal={menuModal} setMenuModal={setMenuModal} handleMenuSave={handleMenuSave} saving={saving} categories={categories} onClose={() => setMenuModal({ open: false, edit: null, form: { name: "", description: "", price: "", image_file: null, image_path: "", category_id: "" } })} />}
+      {showMenuDel && <ConfirmModal text={`"${showMenuDel.name}" silinsin mi?`} onCancel={() => setShowMenuDel(null)} onConfirm={handleDeleteMenu} />}
+      {modal.open && modal.type === "success" && <SuccessModal open onClose={() => setModal(m => ({ ...m, open: false }))} title={modal.title} message={modal.message} icon={<CheckCircle className="text-green-500 w-6 h-6 mr-2" />} />}
+      {modal.open && modal.type === "error" && <ErrorModal open onClose={() => setModal(m => ({ ...m, open: false }))} title={modal.title} message={modal.message} icon={<AlertCircle className="text-red-500 w-6 h-6 mr-2" />} />}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import React from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { motion } from "framer-motion";
 import { Edit2, Trash2, GripVertical } from "lucide-react";
 
 export default function MenuTable({
@@ -29,11 +28,13 @@ export default function MenuTable({
             <table className="w-full text-sm table-fixed">
               <thead>
                 <tr className="border-b">
-                  <th className="w-8"></th>
+                  <th className="w-8" />
                   <th className="py-2 text-left w-1/4">Ürün</th>
-                  <th className="py-2 text-left w-2/5">Açıklama</th>
+                  <th className="py-2 text-left w-2/5 hidden md:table-cell">
+                    Açıklama
+                  </th>
                   <th className="py-2 text-center w-1/6">Fiyat</th>
-                  <th className="py-2 w-16 text-center"></th>
+                  <th className="py-2 w-16 text-center" />
                 </tr>
               </thead>
               <tbody>
@@ -51,22 +52,16 @@ export default function MenuTable({
                       index={idx}
                     >
                       {(provided, snapshot) => (
-                        <motion.tr
+                        <tr
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          // Sürükleme stili için:
                           style={provided.draggableProps.style}
-                          layout={!snapshot.isDragging}
-                          transition={{
-                            type: "spring",
-                            stiffness: 500,
-                            damping: 30,
-                          }}
-                          className={`
-                            border-b last:border-none group hover:bg-blue-50 transition-colors
-                            ${snapshot.isDragging ? "bg-blue-100 shadow-lg" : ""}
-                          `}
+                          className={`border-b last:border-none transition-colors ${
+                            snapshot.isDragging
+                              ? "bg-blue-100 shadow-lg"
+                              : "hover:bg-blue-50"
+                          }`}
                         >
                           {/* Drag Handle */}
                           <td className="w-8 text-center align-middle">
@@ -84,7 +79,7 @@ export default function MenuTable({
                           </td>
 
                           {/* Description */}
-                          <td className="py-2 w-2/5">
+                          <td className="py-2 w-2/5 hidden md:table-cell">
                             <span className="block truncate max-w-[260px]">
                               {item.description}
                             </span>
@@ -112,7 +107,7 @@ export default function MenuTable({
                               <Trash2 className="w-5 h-5 text-red-500 hover:text-red-600" />
                             </button>
                           </td>
-                        </motion.tr>
+                        </tr>
                       )}
                     </Draggable>
                   ))

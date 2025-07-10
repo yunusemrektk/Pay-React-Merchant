@@ -47,42 +47,30 @@ export default function AllMenuList({ categories, menu, activeCatId }) {
                 ) : (
                   <div
                     className="
-                      grid 
-                      grid-cols-1 
-                      sm:grid-cols-2 
-                      md:grid-cols-3 
-                      lg:grid-cols-4 
-                      xl:grid-cols-5 
-                      gap-6
+                      grid
+                      grid-cols-2            /* Mobilde her satırda 2 kart */
+                      sm:grid-cols-2         /* Küçük ekranlar için de 2 */
+                      md:grid-cols-3         /* Orta ekranlarda 3 */
+                      lg:grid-cols-4         /* Büyük ekranda 4 */
+                      xl:grid-cols-5         /* En geniş ekranda 5 */
+                      gap-4                  /* Kartlar arası boşluk */
                     "
                   >
                     {catProducts.map((prod) => (
                       <motion.div
                         key={prod.id}
                         whileHover={{ y: -4 }}
-                        className="
-                          relative 
-                          bg-white 
-                          rounded-lg 
-                          shadow-sm 
-                          hover:shadow-md 
-                          transition-shadow 
-                          overflow-hidden
-                        "
+                        className="relative bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hiddenflex flex-col"
                       >
-                        {/* Fiyat Badge */}
+                        {/* Fiyat Rozeti – kartın sağ üst köşesinde */}
                         <span
-                          className="
-                            absolute top-3 right-3 
-                            bg-blue-600 text-white text-xs font-semibold 
-                            px-2 py-1 rounded
-                          "
+                          className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-semibold px-2 py-1 roundedz-10"
                         >
                           {parseFloat(prod.price).toFixed(2)} ₺
                         </span>
 
                         {/* Resim */}
-                        <div className="w-full" style={{ aspectRatio: "3 / 2" }}>
+                        <div className="w-full aspect-[3/2]">
                           <ProductThumbnail
                             imagePath={prod.image}
                             alt={prod.name}
@@ -91,7 +79,7 @@ export default function AllMenuList({ categories, menu, activeCatId }) {
                         </div>
 
                         {/* İçerik */}
-                        <div className="p-4">
+                        <div className="p-4 flex-1 flex flex-col justify-end">
                           <h4 className="text-sm font-medium text-gray-800 truncate">
                             {prod.name}
                           </h4>
@@ -100,6 +88,7 @@ export default function AllMenuList({ categories, menu, activeCatId }) {
                           </p>
                         </div>
                       </motion.div>
+
                     ))}
                   </div>
                 )}
