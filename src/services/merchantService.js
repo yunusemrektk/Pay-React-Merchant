@@ -1,12 +1,19 @@
-import { uploadImage } from "./cloudinaryService";
+import { uniqId } from "../util/MenuItemUtil";
+import { uploadMerchantBannerOnBackend } from "./cloudinaryService";
 
 export async function uploadMerchantBanner({ file, merchantId }) {
   if (!merchantId) throw new Error("merchantId is required");
 
   const folder = `${merchantId}/banner`;
+  const publicId = 'main';
 
-  return await uploadImage({
+  console.log(merchantId)
+    console.log(folder)
+  await uploadMerchantBannerOnBackend({
     file,
-    folder,
+    merchantId,
+    publicId
   });
+
+  return `${merchantId}/banner/${publicId}`;
 }

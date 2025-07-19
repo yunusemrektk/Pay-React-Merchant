@@ -9,7 +9,6 @@ import CategoryList from "./CategoryList";
 import MenuTable from "./MenuTable";
 import AllMenuList from "./AllMenuList";
 import CategoryModal from "../../Modals/CategoryModal";
-import MenuModal from "../../Modals/MenuModal";
 import ConfirmModal from "../../Modals/ConfirmModal";
 import SuccessModal from "../../modals/SuccessModal";
 import ErrorModal from "../../modals/ErrorModal";
@@ -18,6 +17,7 @@ import { uploadMenuItemImage } from "../../../services/menuItemService";
 import { uniqId } from "../../../util/MenuItemUtil";
 import { useCategories } from "../../../hooks/useCategories";
 import MenuTableMobile from "./MenuTableMobile";
+import MenuModal from "../../modals/MenuModal";
 
 export default function CategoryMenuSettings() {
 

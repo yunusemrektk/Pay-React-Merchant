@@ -25,7 +25,7 @@ export default function CategoryList({
           <ul
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className="space-y-2 max-h-[320px] overflow-y-auto pr-2"
+            className="space-y-2 max-h-[320px] overflow-y-auto pr-2 select-none"
             style={{ overscrollBehavior: "contain" }}
           >
             {categories.map((cat, index) => (
@@ -36,12 +36,13 @@ export default function CategoryList({
                     {...provided.draggableProps}
                     className={`
                       group flex items-center justify-between px-4 py-2 rounded-lg cursor-pointer
-                      border bg-white 
+                      border bg-white
                       transition-shadow transition-colors duration-200
                       ${activeCatId === cat.id 
                         ? "border-blue-500 bg-blue-50 shadow-md" 
                         : "border-gray-200 hover:shadow hover:bg-gray-50"}
                       ${snapshot.isDragging ? "shadow-xl bg-blue-100" : ""}
+                      select-none
                     `}
                     style={provided.draggableProps.style}
                     onClick={() => setActiveCatId(cat.id)}

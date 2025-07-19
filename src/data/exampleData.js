@@ -6,6 +6,7 @@ export const merchants = [
     name: "Cafe Istanbul",
     address: "İstiklal Cad. No:100, Beyoğlu, İstanbul",
     created_at: "2025-06-20 09:00:00",
+    image: "merc1/banner/main",
   },
 ];
 

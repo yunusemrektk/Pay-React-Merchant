@@ -1,52 +1,87 @@
-import React, { useState } from "react";
-import { Store, MapPin, ImageIcon, Save } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Store, MapPin, ImageIcon, Save, Edit2 } from "lucide-react";
 import { merchants } from "../../../data/exampleData";
 import SuccessModal from "../../modals/SuccessModal";
 import ErrorModal from "../../modals/ErrorModal";
 import CloudinaryUpload from "../../molecules/CloudinaryUpload";
+
+import { getCloudinaryUrl } from "../../../services/cloudinaryService";
 import { uploadMerchantBanner } from "../../../services/merchantService";
 
 export default function MerchantInfoSettings() {
   const [info, setInfo] = useState(merchants[0]);
   const [saving, setSaving] = useState(false);
+  const [editingImage, setEditingImage] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  // Seçilen dosyanın blob URL'i
+  const [optimisticPreview, setOptimisticPreview] = useState(null);
+  // Cache-bust param
+  const [imgCacheBust, setImgCacheBust] = useState(Date.now());
+
+  const previewBlobUrlRef = useRef(null);
+
+  // Component unmount olduğunda blob'u temizle
+  useEffect(() => {
+    return () => {
+      if (previewBlobUrlRef.current) {
+        URL.revokeObjectURL(previewBlobUrlRef.current);
+      }
+    };
+  }, []);
 
   const [modal, setModal] = useState({
     open: false,
-    type: null, // "success" | "error"
+    type: null,
     message: "",
     title: "",
   });
 
-  function handleChange(e) {
-    setInfo({ ...info, [e.target.name]: e.target.value });
+  function handleFileSelect(file) {
+    // Yeni dosya seçildiğinde eski blob'u temizle
+    if (previewBlobUrlRef.current) {
+      URL.revokeObjectURL(previewBlobUrlRef.current);
+    }
+    const url = URL.createObjectURL(file);
+    previewBlobUrlRef.current = url;
+    setOptimisticPreview(url);
+    setInfo((prev) => ({ ...prev, image_file: file }));
+    setImageError(false);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
 
-    let uploadedUrl = info.image_path;
-    const isFile = info.image_file instanceof File;
-
-    if (isFile) {
+    if (info.image_file instanceof File) {
       try {
-        uploadedUrl = await uploadMerchantBanner({
+        const newImagePath = await uploadMerchantBanner({
           file: info.image_file,
           merchantId: info.id || "merchant",
         });
+        setImageError(false);
+
+        // Yeni CDN path'i ekle, ama optimisticPreview'u silme
+        setInfo((prev) => ({
+          ...prev,
+          image: newImagePath,
+          image_file: null,
+        }));
+        setEditingImage(false);
+
+        // Cache-bust güncelle (isteğe bağlı)
+        setImgCacheBust(Date.now());
+
       } catch (err) {
         setModal({
           open: true,
           type: "error",
-          message: "Banner yüklenemedi. Lütfen daha sonra tekrar deneyin.",
+          message: "Banner yüklenemedi. Lütfen tekrar deneyin.",
           title: "Yükleme Hatası",
         });
         setSaving(false);
         return;
       }
     }
-
-    setInfo({ ...info, image_path: uploadedUrl });
 
     setModal({
       open: true,
@@ -61,30 +96,71 @@ export default function MerchantInfoSettings() {
     setModal((prev) => ({ ...prev, open: false }));
   }
 
+  // Eğer blob preview varsa onu göster, yoksa Cloudinary URL + cache bust
+  const cloudinaryUrl = info.image ? getCloudinaryUrl(info.image) : null;
+  const shownImageUrl = optimisticPreview
+    ? optimisticPreview
+    : cloudinaryUrl
+    ? `${cloudinaryUrl}?cb=${imgCacheBust}`
+    : null;
+
+  function cancelEdit() {
+    setEditingImage(false);
+    setInfo((prev) => ({ ...prev, image_file: null }));
+    setImageError(false);
+    if (previewBlobUrlRef.current) {
+      URL.revokeObjectURL(previewBlobUrlRef.current);
+      previewBlobUrlRef.current = null;
+    }
+    setOptimisticPreview(null);
+  }
+
   return (
     <div className="max-w-lg mx-auto">
       <h3 className="text-2xl font-semibold mb-6 flex items-center text-gray-800">
         <Store className="w-6 h-6 text-blue-600 mr-2" />
         İş Yeri Bilgisi
       </h3>
-
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-2xl shadow-lg p-6 flex flex-col gap-6"
       >
-        {/* Image section */}
+        {/* Banner */}
         <div className="flex flex-col">
           <label className="flex items-center text-sm font-medium mb-2 text-gray-700">
             <ImageIcon className="w-5 h-5 text-gray-500 mr-2" />
             Logo / Fotoğraf
           </label>
-          <CloudinaryUpload
-            file={info.image_file}
-            initialUrl={info.image_path}
-            onFileSelect={(file) =>
-              setInfo({ ...info, image_file: file })
-            }
-          />
+          <div className="relative">
+            {editingImage ? (
+              <CloudinaryUpload
+                file={info.image_file}
+                onFileSelect={handleFileSelect}
+              />
+            ) : imageError || !shownImageUrl ? (
+              <div className="w-full h-48 flex items-center justify-center bg-gray-100 border border-gray-300 rounded-lg">
+                <ImageIcon className="w-12 h-12 text-gray-400" />
+              </div>
+            ) : (
+              <img
+                src={shownImageUrl}
+                alt="İşyeri resmi"
+                className="w-full h-48 object-contain rounded-lg bg-gray-50"
+                onError={() => setImageError(true)}
+                style={{ transition: "opacity 0.2s" }}
+              />
+            )}
+            {!editingImage && (
+              <button
+                type="button"
+                onClick={() => setEditingImage(true)}
+                className="absolute top-2 right-2 bg-white p-1 rounded-full shadow hover:bg-gray-100 transition"
+                title="Düzenle"
+              >
+                <Edit2 className="w-5 h-5 text-gray-600" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* İşyeri adı */}
@@ -96,7 +172,9 @@ export default function MerchantInfoSettings() {
           <input
             name="name"
             value={info.name}
-            onChange={handleChange}
+            onChange={(e) =>
+              setInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+            }
             className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
             placeholder="Örneğin: Cafe Istanbul"
           />
@@ -111,28 +189,39 @@ export default function MerchantInfoSettings() {
           <input
             name="address"
             value={info.address}
-            onChange={handleChange}
+            onChange={(e) =>
+              setInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+            }
             className="border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
             placeholder="Örneğin: İstiklal Cad. No:100, Beyoğlu"
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className={`
-            mt-4 flex items-center justify-center
-            bg-blue-600 text-white px-4 py-2 rounded-lg
-            hover:bg-blue-700 transition
-            ${saving ? "opacity-70 cursor-wait" : ""}
-          `}
-        >
-          <Save className="w-5 h-5 mr-2" />
-          {saving ? "Kaydediliyor..." : "Kaydet"}
-        </button>
+        {/* Buttons */}
+        <div className="flex items-center space-x-2 mt-4">
+          <button
+            type="submit"
+            disabled={saving}
+            className={`flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition ${
+              saving ? "opacity-70 cursor-wait" : ""
+            }`}
+          >
+            <Save className="w-5 h-5 mr-2" />
+            {saving ? "Kaydediliyor..." : "Kaydet"}
+          </button>
+          {editingImage && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="flex items-center justify-center bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+            >
+              İptal
+            </button>
+          )}
+        </div>
       </form>
 
-      {/* Modallar */}
+      {/* Modals */}
       {modal.open && modal.type === "success" && (
         <SuccessModal
           open={modal.open}

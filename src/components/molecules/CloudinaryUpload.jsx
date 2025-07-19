@@ -1,24 +1,34 @@
 import { useDropzone } from 'react-dropzone';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function CloudinaryUpload({ file, onFileSelect, initialUrl = null }) {
   const [preview, setPreview] = useState(null);
+  const previewUrlRef = useRef(null);
 
   useEffect(() => {
+    // Her yeni file geldiğinde önceki blob'u temizle
+    if (previewUrlRef.current) {
+      URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+    }
+
     if (file instanceof File) {
       const objectUrl = URL.createObjectURL(file);
       setPreview(objectUrl);
-
-      return () => URL.revokeObjectURL(objectUrl);
-    }
-
-    if (!file && initialUrl) {
+      previewUrlRef.current = objectUrl;
+    } else if (!file && initialUrl) {
       setPreview(initialUrl);
-    }
-
-    if (!file && !initialUrl) {
+    } else if (!file && !initialUrl) {
       setPreview(null);
     }
+
+    // Unmount'ta da blob'u temizle
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+        previewUrlRef.current = null;
+      }
+    };
   }, [file, initialUrl]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -34,11 +44,13 @@ export default function CloudinaryUpload({ file, onFileSelect, initialUrl = null
   return (
     <div
       {...getRootProps()}
+      tabIndex={-1}
+      onFocus={e => e.target.blur()}
       className={`border-2 border-dashed rounded-lg p-4 min-h-48 flex flex-col items-center justify-center text-center cursor-pointer transition ${
         isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50'
       }`}
     >
-      <input {...getInputProps()} />
+      <input {...getInputProps()} style={{ display: 'none' }} /> 
       {preview ? (
         <img
           src={preview}
