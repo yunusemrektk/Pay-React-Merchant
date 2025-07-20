@@ -1,9 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, List, Layers, Save as SaveIcon, CheckCircle, AlertCircle } from "lucide-react";
-import {
-  categories as initialCategories,
-  menu_items as initialMenu,
-} from "../../../data/exampleData";
 
 import CategoryList from "./CategoryList";
 import MenuTable from "./MenuTable";
@@ -15,22 +11,21 @@ import ErrorModal from "../../modals/ErrorModal";
 
 import { uploadMenuItemImage } from "../../../services/menuItemService";
 import { uniqId } from "../../../util/MenuItemUtil";
-import { useCategories } from "../../../hooks/useCategories";
+import { useCategories } from "../../../hooks/useMerchantCategories";
 import MenuTableMobile from "./MenuTableMobile";
 import MenuModal from "../../modals/MenuModal";
 
-export default function CategoryMenuSettings() {
-
+export default function CategoryMenuSettings({hostMenu, hostCategories}) {  
   const {
     categories,
     addCategory,
     editCategory,
     deleteCategory,
     sortCategories,
-  } = useCategories(initialCategories);
+  } = useCategories(hostCategories);
 
   // --- State ---
-  const [menu, setMenu] = useState([...initialMenu]);
+  const [menu, setMenu] = useState(hostMenu);
   const [activeCatId, setActiveCatId] = useState(categories[0]?.id || null);
 
   // “Dirty” flags
@@ -58,7 +53,6 @@ export default function CategoryMenuSettings() {
     });
   }
 
-
   function handleDeleteCategory() {
     deleteCategory(showCatDel.id);
     setShowCatDel(null);
@@ -72,7 +66,6 @@ export default function CategoryMenuSettings() {
 
   function handleCatSave(e) {
     e.preventDefault();
-      console.log("handleCatSave")
     if (!catModal.value.trim()) return;
     if (catModal.edit) {
       editCategory(catModal.edit.id, catModal.value);
@@ -177,11 +170,6 @@ export default function CategoryMenuSettings() {
 
   async function handleSaveCatOrder() {
     try {
-      await fetch("/api/category/save-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(categories.map(c => c.id)),
-      });
       setIsCatOrderDirty(false);
       setModal({ open: true, type: "success", title: "Kaydedildi", message: "Kategori sıralaması kaydedildi." });
     } catch {
@@ -268,7 +256,7 @@ export default function CategoryMenuSettings() {
             onSortMenu={handleMenuSort}
           />
         </div>
-        
+
         <div className="block md:hidden mt-2">
           <MenuTableMobile
             menu={filteredMenu}
