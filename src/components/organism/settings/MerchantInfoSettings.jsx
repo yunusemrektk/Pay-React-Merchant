@@ -1,55 +1,62 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Store, MapPin, ImageIcon, Save, Edit2 } from "lucide-react";
-import { merchants } from "../../../data/exampleData";
 import SuccessModal from "../../modals/SuccessModal";
 import ErrorModal from "../../modals/ErrorModal";
 import CloudinaryUpload from "../../molecules/CloudinaryUpload";
-
-import { getCloudinaryUrl } from "../../../services/cloudinaryService";
-import { uploadMerchantBanner } from "../../../services/merchantService";
 import LoadingModal from "../../modals/LoadingModal";
 
+import { getCloudinaryUrl } from "../../../services/cloudinaryService";
+import { getMerchantInfo, uploadMerchantBanner } from "../../../services/merchantService";
+
 export default function MerchantInfoSettings() {
-  const [info, setInfo] = useState(merchants[0]);
-  const [saving, setSaving] = useState(false);
-  const [editingImage, setEditingImage] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  // fixed merchantId for now
+  const merchantId = "merc1";
 
-  // Hem blob preview hem de upload sonrası CDN URL+cb tutulacak
+  // ─── Hooks (always in same order) ────────────────────────────────────────────
+  const [info, setInfo]                       = useState(null);
+  const [saving, setSaving]                   = useState(false);
+  const [editingImage, setEditingImage]       = useState(false);
+  const [imageError, setImageError]           = useState(false);
   const [optimisticPreview, setOptimisticPreview] = useState(null);
-  // cache-bust timestamp
-  const [imgCacheBust, setImgCacheBust] = useState(null);
-
+  const [imgCacheBust, setImgCacheBust]       = useState(null);
+  const [modal, setModal]                     = useState({
+    open: false,
+    type: null,
+    title: "",
+    message: "",
+  });
   const previewBlobUrlRef = useRef(null);
 
-  // Component unmount olduğunda ön bellekteki blob veya temp URL'i temizle
+  // ─── 1) Fetch merchant on mount ─────────────────────────────────────────────
   useEffect(() => {
-    const key = `bannerBust_${info.id}`;
+    let mounted = true;
+    getMerchantInfo(merchantId)
+      .then(data => {
+        if (mounted) setInfo(data);
+      })
+      .catch(err => console.error("Merchant load error:", err));
+    return () => { mounted = false; };
+  }, [merchantId]);
+
+  // ─── 2) Cache-bust effect (guarded) ─────────────────────────────────────────
+  useEffect(() => {
+    if (!info) return;
+    const key    = `bannerBust_${info.id}`;
     const stored = localStorage.getItem(key);
     if (stored) {
       const bust = Number(stored);
       setImgCacheBust(bust);
-      setOptimisticPreview(`${getCloudinaryUrl(info.image)}?cb=${bust}`);
+      setOptimisticPreview(`${getCloudinaryUrl(info.image_path)}?cb=${bust}`);
     } else {
-      // İlk yüklemede de cache‐bust yoksa direkt CDN URL atayın
-      setOptimisticPreview(getCloudinaryUrl(info.image));
+      setOptimisticPreview(getCloudinaryUrl(info.image_path));
     }
-  // info.id veya info.image değiştiğinde yeniden tetiklenir
-  }, [info.id, info.image]);
+  }, [info]);
 
-  const [modal, setModal] = useState({
-    open: false,
-    type: null, // "success" | "error"
-    title: "",
-    message: "",
-  });
-
+  // ─── Handlers ────────────────────────────────────────────────────────────────
   function handleFileSelect(file) {
-    // Eski blob'u temizle
     if (previewBlobUrlRef.current) {
       URL.revokeObjectURL(previewBlobUrlRef.current);
     }
-    // Yeni blob URL oluştur
     const url = URL.createObjectURL(file);
     previewBlobUrlRef.current = url;
     setOptimisticPreview(url);
@@ -63,69 +70,45 @@ export default function MerchantInfoSettings() {
 
     if (info.image_file instanceof File) {
       try {
-        // upload
         const newPublicId = await uploadMerchantBanner({
           file: info.image_file,
-          merchantId: info.id || "merchant",
+          merchantId: info.id,
         });
-        setImageError(false);
-
-        // CDN URL + cache-bust oluştur
-        const url = getCloudinaryUrl(newPublicId);
+        const url  = getCloudinaryUrl(newPublicId);
         const bust = Date.now();
         localStorage.setItem(`bannerBust_${info.id}`, String(bust));
-        const finalUrl = `${url}?cb=${bust}`;
-     
-        
-        // state'e yaz
         setInfo(prev => ({
           ...prev,
-          image: newPublicId,
+          image:      newPublicId,
           image_file: null,
         }));
         setImgCacheBust(bust);
-        setOptimisticPreview(finalUrl);
+        setOptimisticPreview(`${url}?cb=${bust}`);
         setEditingImage(false);
-
         setModal({
-          open: true,
-          type: "success",
-          title: "Başarılı",
-          message: "Bilgileriniz başarıyla güncellendi!",
+          open:   true,
+          type:   "success",
+          title:  "Başarılı",
+          message:"Bilgileriniz başarıyla güncellendi!",
         });
-      } catch (err) {
+      } catch {
         setModal({
-          open: true,
-          type: "error",
-          title: "Yükleme Hatası",
-          message: "Banner yüklenemedi. Lütfen tekrar deneyin.",
+          open:   true,
+          type:   "error",
+          title:  "Yükleme Hatası",
+          message:"Banner yüklenemedi. Lütfen tekrar deneyin.",
         });
       }
     } else {
-      // sadece metin alanı kaydediliyorsa
       setModal({
-        open: true,
-        type: "success",
-        title: "Başarılı",
-        message: "Bilgileriniz başarıyla güncellendi!",
+        open:   true,
+        type:   "success",
+        title:  "Başarılı",
+        message:"Bilgileriniz başarıyla güncellendi!",
       });
     }
 
     setSaving(false);
-  }
-
-  function closeModal() {
-    setModal(prev => ({ ...prev, open: false }));
-  }
-
-  // Görüntülenecek URL: önce optimisticPreview (blob veya yeni CDN url),
-  // yoksa eski CDN url + cache-bust (eğer varsa)
-  const baseCloudUrl = info.image ? getCloudinaryUrl(info.image) : null;
-  let shownImageUrl = optimisticPreview;
-  if (!shownImageUrl && baseCloudUrl) {
-    shownImageUrl = imgCacheBust
-      ? `${baseCloudUrl}?cb=${imgCacheBust}`
-      : baseCloudUrl;
   }
 
   function cancelEdit() {
@@ -139,9 +122,28 @@ export default function MerchantInfoSettings() {
     setOptimisticPreview(null);
   }
 
+  function closeModal() {
+    setModal(prev => ({ ...prev, open: false }));
+  }
+
+  // ─── 3) Loading guard ─────────────────────────────────────────────────────────
+  if (!info) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingModal open description="İşyeri bilgileri yükleniyor..." />
+      </div>
+    );
+  }
+
+  // ─── 4) Render form ──────────────────────────────────────────────────────────
+  const baseCloudUrl = info.image ? getCloudinaryUrl(info.image) : null;
+  let shownImageUrl  = optimisticPreview || (imgCacheBust
+    ? `${baseCloudUrl}?cb=${imgCacheBust}`
+    : baseCloudUrl);
+
   return (
     <div className="max-w-lg mx-auto">
-      {saving && <LoadingModal open={true} description="Banner upload ediliyor..." />}
+      {saving && <LoadingModal open description="Banner upload ediliyor..." />}
 
       <h3 className="text-2xl font-semibold mb-6 flex items-center text-gray-800">
         <Store className="w-6 h-6 text-blue-600 mr-2" />
@@ -164,7 +166,6 @@ export default function MerchantInfoSettings() {
               </div>
             ) : (
               <img
-                key={shownImageUrl} 
                 src={shownImageUrl}
                 alt="İşyeri resmi"
                 className="w-full h-48 object-contain rounded-lg bg-gray-50"
@@ -176,7 +177,7 @@ export default function MerchantInfoSettings() {
               <button
                 type="button"
                 onClick={() => setEditingImage(true)}
-                className="absolute top-2 right-2 bg-white p-1 rounded-full shadow hover:bg-gray-100 transition"
+                className="absolute top-2 right-2 bg-white p-1 rounded-full shadow hover:bg-gray-100"
                 title="Düzenle"
               >
                 <Edit2 className="w-5 h-5 text-gray-600" />
@@ -220,7 +221,7 @@ export default function MerchantInfoSettings() {
           <button
             type="submit"
             disabled={saving}
-            className={`flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition ${saving ? "opacity-70 cursor-wait" : "" }`}
+            className={`flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition ${saving ? "opacity-70 cursor-wait" : ""}`}
           >
             <Save className="w-5 h-5 mr-2" />
             {saving ? "Kaydediliyor..." : "Kaydet"}
@@ -229,7 +230,7 @@ export default function MerchantInfoSettings() {
             <button
               type="button"
               onClick={cancelEdit}
-              className="flex items-center justify-center bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+              className="flex items-center justify-center bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
             >
               İptal
             </button>
@@ -237,22 +238,11 @@ export default function MerchantInfoSettings() {
         </div>
       </form>
 
-      {/* Modals */}
       {modal.open && modal.type === "success" && (
-        <SuccessModal
-          open={modal.open}
-          onClose={closeModal}
-          title={modal.title}
-          message={modal.message}
-        />
+        <SuccessModal open={modal.open} onClose={closeModal} title={modal.title} message={modal.message} />
       )}
       {modal.open && modal.type === "error" && (
-        <ErrorModal
-          open={modal.open}
-          onClose={closeModal}
-          title={modal.title}
-          message={modal.message}
-        />
+        <ErrorModal   open={modal.open} onClose={closeModal} title={modal.title} message={modal.message} />
       )}
     </div>
   );

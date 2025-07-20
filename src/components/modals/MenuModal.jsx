@@ -12,6 +12,7 @@ import {
 import CloudinaryUpload from "../molecules/CloudinaryUpload";
 import { CloseButton } from "../atom/CloseButton";
 import CategorySelect from "../atom/CategorySelect";
+import LoadingModal from "./LoadingModal";
 
 export default function MenuModal({
   onClose,
@@ -56,6 +57,8 @@ export default function MenuModal({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto flex items-start sm:items-center justify-center bg-black/50 p-4">
+      {saving && <LoadingModal open={true} description="Banner upload ediliyor..." />}
+
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -93,9 +96,8 @@ export default function MenuModal({
             {/* Category */}
             <div>
               <label
-                className={`flex items-center text-sm font-medium mb-1 ${
-                  menuModal.edit ? "text-blue-700" : "text-gray-700"
-                }`}
+                className={`flex items-center text-sm font-medium mb-1 ${menuModal.edit ? "text-blue-700" : "text-gray-700"
+                  }`}
               >
                 <Tag className="w-4 h-4 mr-1 text-gray-600" /> Kategori
               </label>
@@ -108,20 +110,18 @@ export default function MenuModal({
                     form: { ...menuModal.form, category_id: val },
                   })
                 }
-                className={`border rounded-lg ${
-                  menuModal.edit
+                className={`border rounded-lg ${menuModal.edit
                     ? "bg-blue-50 border-blue-300"
                     : "bg-white border-gray-300"
-                }`}
+                  }`}
               />
             </div>
 
             {/* Name */}
             <div>
               <label
-                className={`flex items-center text-sm font-medium mb-1 ${
-                  menuModal.edit ? "text-blue-700" : "text-gray-700"
-                }`}
+                className={`flex items-center text-sm font-medium mb-1 ${menuModal.edit ? "text-blue-700" : "text-gray-700"
+                  }`}
               >
                 <Edit3 className="w-4 h-4 mr-1 text-gray-600" /> Ürün Adı
               </label>
@@ -139,9 +139,8 @@ export default function MenuModal({
             {/* Description */}
             <div>
               <label
-                className={`flex items-center text-sm font-medium mb-1 ${
-                  menuModal.edit ? "text-blue-700" : "text-gray-700"
-                }`}
+                className={`flex items-center text-sm font-medium mb-1 ${menuModal.edit ? "text-blue-700" : "text-gray-700"
+                  }`}
               >
                 <FileText className="w-4 h-4 mr-1 text-gray-600" /> Açıklama
               </label>
@@ -161,9 +160,8 @@ export default function MenuModal({
             {/* Price */}
             <div>
               <label
-                className={`flex items-center text-sm font-medium mb-1 ${
-                  menuModal.edit ? "text-blue-700" : "text-gray-700"
-                }`}
+                className={`flex items-center text-sm font-medium mb-1 ${menuModal.edit ? "text-blue-700" : "text-gray-700"
+                  }`}
               >
                 <CreditCard className="w-4 h-4 mr-1 text-gray-600" /> Fiyat (₺)
               </label>
@@ -189,9 +187,8 @@ export default function MenuModal({
             {/* Image Upload */}
             <div>
               <label
-                className={`flex items-center text-sm font-medium mb-1 ${
-                  menuModal.edit ? "text-blue-700" : "text-gray-700"
-                }`}
+                className={`flex items-center text-sm font-medium mb-1 ${menuModal.edit ? "text-blue-700" : "text-gray-700"
+                  }`}
               >
                 <ImageIcon className="w-4 h-4 mr-1 text-gray-600" /> Ürün
                 Resmi
@@ -200,11 +197,10 @@ export default function MenuModal({
                 file={menuModal.form.image_file}
                 initialUrl={menuModal.form.image_path}
                 onFileSelect={(file) => onChange("image_file")(file)}
-                className={`w-full border-dashed border-2 rounded-lg p-4 ${
-                  menuModal.edit
+                className={`w-full border-dashed border-2 rounded-lg p-4 ${menuModal.edit
                     ? "bg-blue-50 border-blue-300"
                     : "bg-white border-gray-300"
-                }`}
+                  }`}
               />
               <p className="text-xs text-gray-400 mt-1">
                 PNG/JPG, maks. 2 MB

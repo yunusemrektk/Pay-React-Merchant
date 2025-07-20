@@ -3,52 +3,52 @@ import axios from "axios";
 /**
  * Cloudinary’ye dosya yükleme
  */
-export async function uploadImage({ file, folder, publicId }) {
-  if (!file) throw new Error("file is required");
-  // 1. Signature'ı backend'den al
-  const signatureRes = await axios.post("http://localhost:3001/api/cloudinary/signature", {
-    public_id: publicId,
-    folder,
+/**
+ * file + ek alanları backend'e post’lar, public_id döner
+ */
+async function uploadViaBackend(endpoint, data) {
+  const form = new FormData();
+  Object.entries(data).forEach(([key, val]) => {
+    if (val != null) form.append(key, val);
   });
-  const { signature, timestamp, apiKey } = signatureRes.data;
 
-  // 2. Cloudinary'ye yükle
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", "merchant-items");
-  formData.append("api_key", apiKey);
-  formData.append("timestamp", timestamp);
-  formData.append("signature", signature);
-  if (publicId) formData.append("public_id", publicId);
-  if (folder) formData.append("folder", folder);
+  const res = await fetch(endpoint, {
+    method: "POST",
+    body: form,
+  });
 
-  const res = await axios.post(
-    "https://api.cloudinary.com/v1_1/dw5hdpb6v/image/upload",
-    formData
-  );
+  if (!res.ok) {
+    throw new Error("Upload failed: " + res.statusText);
+  }
 
-  return res.data.secure_url;
-}
-
-// Görseli göstermek için:
-export function getCloudinaryUrl(publicId, cloudName = "dw5hdpb6v") {
-  return `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto/${publicId}`;
+  const json = await res.json();
+  return json.public_id;
 }
 
 export async function uploadMerchantBannerOnBackend({ file, merchantId }) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("merchantId", merchantId);
+  if (!file) throw new Error("file is required");
+  if (!merchantId) throw new Error("merchantId is required");
 
-  console.log(merchantId)
-  const res = await fetch("http://localhost:3001/api/cloudinary/banner-upload", {
-    method: "POST",
-    body: formData,
-  });
+  return uploadViaBackend(
+    "http://localhost:3001/api/cloudinary/banner-upload",
+    { file, merchantId }
+  );
+}
 
-  console.log(res.data)
+export async function uploadMenuItemImageOnBackend({ file, merchantId, itemId }) {
+  if (!file) throw new Error("file is required");
+  if (!merchantId) throw new Error("merchantId is required");
+  if (!itemId) throw new Error("itemId is required");
 
-  if (!res.ok) throw new Error("Upload failed");
-  const data = await res.json();
-  return data.public_id;
+  return uploadViaBackend(
+    "http://localhost:3001/api/cloudinary/menu-item-upload",
+    { file, merchantId, itemId }
+  );
+}
+
+export function getCloudinaryUrl(publicId) {
+ const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  if (!publicId) throw new Error("publicId is required");
+  if (!cloudName) throw new Error("CLOUDINARY_CLOUD_NAME tanımlı değil");
+  return `https://res.cloudinary.com/${cloudName}/image/upload/f_auto,q_auto/${publicId}`;
 }
